@@ -1,1 +1,2 @@
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/6c703f93-1e37-4e23-9912-1c2dd5a69743" />
+**e-tungo** is a simple and easy-to-use **Rwandan animals and animal-products marketplace** that connects farmers, livestock sellers, and buyers across Rwanda. Users can advertise, discover, and find animals and animal products such as cattle, goats, pigs, chickens, rabbits, milk, eggs, and honey, then contact each other directly.
