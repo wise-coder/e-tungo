@@ -136,6 +136,15 @@ export function authRoute(handler: (request: Request) => Promise<NextResponse>) 
       return response;
     } catch (error) {
       const status = error instanceof AuthError ? error.status : 500;
+      if (!(error instanceof AuthError)) {
+        const failure = error as { name?: string; code?: string | number } | null;
+        console.error("Authentication API failure", {
+          path: new URL(request.url).pathname,
+          name: failure?.name ?? "UnknownError",
+          code: failure?.code ?? null,
+          database: process.env.MONGODB_URI?.trim() ? "mongodb" : "sqlite",
+        });
+      }
       return NextResponse.json({ error: error instanceof AuthError ? error.message : "Unable to complete the request." }, {
         status, headers: { "Cache-Control": "no-store", ...(status === 429 ? { "Retry-After": "900" } : {}) },
       });
