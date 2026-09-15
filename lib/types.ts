@@ -15,7 +15,7 @@ export type ListingCategory =
   | "honey"
   | "other";
 
-export type ListingStatus = "active" | "sold" | "expired";
+export type ListingStatus = "active" | "sold" | "expired" | "hidden";
 
 export interface User {
   id: string;
@@ -48,6 +48,15 @@ export interface Listing {
   images: string[];
   status: ListingStatus;
   views: number;
+  uniqueViews?: number;
+  saves?: number;
+  calls?: number;
+  whatsappClicks?: number;
+  shares?: number;
+  trendingScore?: number;
+  featuredAt?: string;
+  featureExpiresAt?: string;
+  recommended?: boolean;
   postedAt: string;
   boostedAt?: string;
   boostExpiresAt?: string;

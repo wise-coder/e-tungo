@@ -34,6 +34,7 @@ function BrowseContent() {
     (searchParams.get("category") as ListingCategory) ?? ""
   );
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState("recommended");
 
   useEffect(() => {
     const timer = window.setTimeout(() => setLoading(false), 250);
@@ -51,7 +52,11 @@ function BrowseContent() {
     return true;
   });
 
-  const sortedListings = sortListingsForMarket(filteredListings);
+  const sortedListings = sort === "recommended" ? sortListingsForMarket(filteredListings)
+    : [...filteredListings].sort((a, b) => sort === "price-low" ? a.price - b.price
+      : sort === "price-high" ? b.price - a.price
+      : sort === "views" ? b.views - a.views
+      : new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime());
 
   const activeCategoryLabel = selectedCategory
     ? getCategoryLabel(selectedCategory, lang)
@@ -192,6 +197,15 @@ function BrowseContent() {
                       : "listings"}
                 </p>
               </div>
+              <label className="text-xs text-[#6f655c]">Sort by
+                <select value={sort} onChange={event => setSort(event.target.value)} className="ml-2 rounded-full border border-[#e6dfd5] bg-white px-3 py-2 text-sm text-[#262424]">
+                  <option value="recommended">Recommended order</option>
+                  <option value="newest">Newest</option>
+                  <option value="price-low">Lowest price</option>
+                  <option value="price-high">Highest price</option>
+                  <option value="views">Most viewed</option>
+                </select>
+              </label>
             </div>
 
             {loading ? (

@@ -2,12 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
+import { useApp } from "@/context/AppContext";
 
 export default function AdminLogoutButton() {
   const router = useRouter();
+  const { logout } = useApp();
 
   const handleLogout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
+    if (!await logout()) return;
     router.push("/signin?redirect=/admin");
     router.refresh();
   };

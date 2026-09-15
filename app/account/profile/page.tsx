@@ -7,11 +7,12 @@ import { useApp } from "@/context/AppContext";
 import ProfileImagePicker from "@/components/ProfileImagePicker";
 
 export default function ProfilePage() {
-  const { t, hydrated, user, setUser } = useApp();
+  const { t, hydrated, user, updateProfile } = useApp();
   const router = useRouter();
 
   const [name, setName] = useState(user?.name ?? "");
   const [district, setDistrict] = useState(user?.district ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
   const [profileImage, setProfileImage] = useState(user?.profileImage ?? "");
   const [saved, setSaved] = useState(false);
@@ -20,9 +21,10 @@ export default function ProfilePage() {
     if (!user) return;
     setName(user.name ?? "");
     setDistrict(user.district ?? "");
+    setPhone(user.phone ?? "");
     setBio(user.bio ?? "");
     setProfileImage(user.profileImage ?? "");
-  }, [user?.id, user?.name, user?.district, user?.bio, user?.profileImage]);
+  }, [user?.id, user?.name, user?.district, user?.phone, user?.bio, user?.profileImage]);
 
   if (!hydrated) {
     return (
@@ -49,16 +51,18 @@ export default function ProfilePage() {
     );
   }
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !district) return;
-    setUser({
+    const success = await updateProfile({
       ...user,
       name: name.trim(),
       district,
-      bio: bio.trim() || undefined,
-      profileImage: profileImage || undefined,
+      phone: phone.trim(),
+      bio: bio.trim(),
+      profileImage,
     });
+    if (!success) return;
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -80,17 +84,7 @@ export default function ProfilePage() {
             onChange={(nextImage) => setProfileImage(nextImage ?? "")}
           />
           <p className="text-sm text-gray-500">{user.email}</p>
-          {user.phone && (
-            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1.5">
-              {user.phone}
-              {user.phoneVerified && (
-                <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium">
-                  <ShieldCheck size={13} />
-                  {t.phoneVerified}
-                </span>
-              )}
-            </p>
-          )}
+          {user.phone && <p className="text-sm text-gray-500">{user.phone}</p>}
         </div>
 
         <form onSubmit={handleSave} className="space-y-5">
@@ -116,16 +110,10 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {user.phone && (
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                {t.phoneNumber}
-              </label>
-              <div className="input-field bg-gray-100 text-gray-500 cursor-not-allowed">
-                {user.phone}
-              </div>
-            </div>
-          )}
+          <label className="block text-sm font-semibold text-gray-700">
+            {t.phoneNumber}
+            <input type="tel" autoComplete="tel" maxLength={100} className="input-field mt-1.5" value={phone} onChange={e => setPhone(e.target.value)} />
+          </label>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">

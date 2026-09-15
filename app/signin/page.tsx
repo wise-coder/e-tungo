@@ -6,41 +6,19 @@ import Link from "next/link";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useApp } from "@/context/AppContext";
-import type { User } from "@/lib/types";
-import { userIdFromEmail } from "@/lib/user-utils";
-
-const ADMIN_EMAIL = (process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "tungatechnologies@gmail.com")
-  .trim()
-  .toLowerCase();
-
-function buildUser(email: string, district: string, existing?: User): User {
-  const emailName = email.split("@")[0]?.replace(/[._-]+/g, " ").trim() || "Member";
-  const baseName = existing?.name?.trim() || emailName;
-  return {
-    id: existing?.id ?? userIdFromEmail(email),
-    name: baseName,
-    email: email.trim(),
-    district,
-    userType: existing?.userType ?? "farmer",
-    phone: existing?.phone,
-    phoneVerified: existing?.phoneVerified ?? false,
-    createdAt: existing?.createdAt ?? new Date().toISOString(),
-    profileImage: existing?.profileImage,
-    bio: existing?.bio,
-  };
-}
+import { safeRedirect } from "@/lib/auth-client";
 
 export default function SignInPage() {
   const { t, setUser } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const redirect = searchParams.get("redirect") ?? "/account";
-  const defaultDistrict = t.districts[0];
+  const redirect = safeRedirect(searchParams.get("redirect"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const handleEmailSignIn = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -53,28 +31,21 @@ export default function SignInPage() {
       return;
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
-    if (normalizedEmail === ADMIN_EMAIL) {
-      const adminResponse = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalizedEmail, password }),
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
-
-      if (!adminResponse.ok) {
-        setError("Invalid admin credentials.");
-        return;
-      }
-
-      setUser(null);
-      router.push("/admin");
-      return;
-    }
-
-    const response = await fetch(`/api/users?email=${encodeURIComponent(email.trim())}`);
-    const existing = response.ok ? ((await response.json()) as User | null) : null;
-    setUser(buildUser(email, existing?.district ?? defaultDistrict, existing ?? undefined));
-    router.push(redirect);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to sign in.");
+      setUser(data.user);
+      setPassword("");
+      router.push(data.admin ? "/admin" : redirect);
+      router.refresh();
+    } catch (error) { setError(error instanceof Error ? error.message : "Unable to sign in."); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -150,12 +121,14 @@ export default function SignInPage() {
 
               <button
                 type="submit"
+                disabled={busy}
                 className="w-full rounded-2xl bg-brand-700 px-4 py-3.5 font-bold text-white transition-colors hover:bg-brand-800"
               >
                 {t.signInWithEmail}
               </button>
             </form>
 
+            <div className="mt-4 text-sm text-brand-700"><Link href="/forgot-password">Forgot password?</Link></div>
             <p className="mt-6 text-center text-sm text-gray-600">
               {t.signUpSubtitle}{" "}
               <Link

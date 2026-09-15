@@ -10,6 +10,14 @@ export function isBoostActive(listing: Pick<Listing, "boostedAt" | "boostExpires
 
 export const isListingBoostActive = isBoostActive;
 
+export function isFeaturedActive(listing: Listing) {
+  return Boolean(listing.featuredAt && (!listing.featureExpiresAt || new Date(listing.featureExpiresAt).getTime() > Date.now()));
+}
+
+export function isTrending(listing: Listing) {
+  return listing.status === "active" && (listing.trendingScore ?? 0) >= 10;
+}
+
 export function getBoostScore(listing: Listing) {
   if (!isBoostActive(listing)) return 0;
 
@@ -20,8 +28,11 @@ export function getBoostScore(listing: Listing) {
 
 export function sortListingsForMarket(listings: Listing[]) {
   return [...listings].sort((a, b) => {
-    const boostDelta = getBoostScore(b) - getBoostScore(a);
-    if (boostDelta !== 0) return boostDelta;
+    const priority = (listing: Listing) => isFeaturedActive(listing) ? 4 : isBoostActive(listing) ? 3 : isTrending(listing) ? 2 : 1;
+    const priorityDelta = priority(b) - priority(a);
+    if (priorityDelta) return priorityDelta;
+    if (isTrending(a) && isTrending(b) && (b.trendingScore ?? 0) !== (a.trendingScore ?? 0))
+      return (b.trendingScore ?? 0) - (a.trendingScore ?? 0);
 
     const postedDelta = new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
     if (postedDelta !== 0) return postedDelta;

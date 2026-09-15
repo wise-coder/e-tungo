@@ -22,6 +22,7 @@ const navItems = [
   { href: "/admin", label: "Overview", icon: Home },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/listings", label: "Listings", icon: ClipboardList },
+  { href: "/admin/analytics", label: "Marketplace Analytics", icon: BarChart3 },
   { href: "/admin/requests", label: "Requests", icon: Megaphone },
   { href: "/admin/boosts", label: "Boost review", icon: BarChart3 },
   { href: "/admin/activity", label: "Activity", icon: Clock3 },

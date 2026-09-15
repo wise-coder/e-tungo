@@ -11,6 +11,8 @@
 
 # next.js
 /.next/
+/.next-security/
+/.next-debug/
 /out/
 
 # production
@@ -27,6 +29,11 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
+.env.*
+!.env.example
+/data/*.sqlite*
+/test-results/
 
 # vercel
 .vercel

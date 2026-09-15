@@ -7,9 +7,11 @@ interface PhoneContactButtonsProps {
   phone: string;
   sellerName: string;
   listingTitle: string;
+  onCall?: () => void;
+  onWhatsApp?: () => void;
 }
 
-export default function PhoneContactButtons({ phone, sellerName, listingTitle }: PhoneContactButtonsProps) {
+export default function PhoneContactButtons({ phone, sellerName, listingTitle, onCall, onWhatsApp }: PhoneContactButtonsProps) {
   const { t } = useApp();
   const [copied, setCopied] = useState(false);
 
@@ -56,6 +58,7 @@ export default function PhoneContactButtons({ phone, sellerName, listingTitle }:
     <div className="flex gap-3">
       <a
         href={`tel:${cleanPhone}`}
+        onClick={onCall}
         className="flex flex-1 items-center justify-center gap-2 rounded-full bg-brand-700 py-4 font-semibold text-white transition-colors hover:bg-brand-800 active:scale-95"
         aria-label={`${t.callSeller} ${sellerName}`}
       >
@@ -64,6 +67,7 @@ export default function PhoneContactButtons({ phone, sellerName, listingTitle }:
       </a>
       <a
         href={`https://wa.me/${cleanPhone.replace("+", "")}?text=${whatsappMessage}`}
+        onClick={onWhatsApp}
         target="_blank"
         rel="noopener noreferrer"
         className="flex flex-1 items-center justify-center gap-2 rounded-full bg-gray-900 py-4 font-semibold text-white transition-colors hover:bg-gray-800 active:scale-95"

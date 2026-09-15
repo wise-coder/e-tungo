@@ -73,7 +73,7 @@ export default function SellPage() {
     return true;
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!form.category) return;
     // Require sign-in
     if (!user) {
@@ -84,12 +84,12 @@ export default function SellPage() {
     const id = `new-${Date.now()}`;
     const catLabel = getCategoryLabel(form.category, lang);
 
-    addListing({
+    const created = await addListing({
       id,
       sellerId: user.id,
       sellerName: user.name,
       sellerEmail: user.email,
-      sellerPhone: user.phone ?? user.email,
+      sellerPhone: user.phone ?? "",
       sellerPhoneVerified: Boolean(user.phone && user.phoneVerified),
       sellerDistrict: user.district,
       category: form.category,
@@ -123,7 +123,7 @@ export default function SellPage() {
       description: form.description || undefined,
     });
 
-    setPublishedId(id);
+    if (created) setPublishedId(created.id);
   };
 
   // Success screen
@@ -521,7 +521,7 @@ function Field({
 
 // ── Preview step ──────────────────────────────────────────────────────────────
 function PreviewStep({ form, category }: { form: FormData; category: ListingCategory }) {
-  const { t, lang } = useApp();
+  const { t, lang, user } = useApp();
 
   return (
     <div>
@@ -552,6 +552,8 @@ function PreviewStep({ form, category }: { form: FormData; category: ListingCate
           {form.district && (
             <p className="text-sm text-gray-500">📍 {form.district}{form.sector ? `, ${form.sector}` : ""}</p>
           )}
+          {user?.phone ? <p className="text-sm text-gray-600">Buyers can call or WhatsApp you at <strong>{user.phone}</strong>.</p>
+            : <p className="text-sm text-red-600">Add your mobile number in <a className="font-semibold underline" href="/account/profile">your profile</a> before publishing.</p>}
           {form.description && (
             <p className="text-sm text-gray-600 mt-2">{form.description}</p>
           )}

@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { ArrowRight, Megaphone } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import ListingCard from "@/components/ListingCard";
+import { isFeaturedActive } from "@/lib/listing-boost";
 
 export default function HomePage() {
-  const { lang } = useApp();
+  const { lang, listings } = useApp();
+  const featured = listings.filter(listing => listing.status === "active" && isFeaturedActive(listing)).slice(0, 4);
 
   return (
     <div className="min-h-screen bg-[#f3f1ed]">
@@ -25,6 +28,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {featured.length > 0 && <section className="px-4 py-6 md:py-8">
+        <div className="mx-auto max-w-[1280px]">
+          <h2 className="mb-4 text-xl font-black text-[#262424]">Featured listings</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{featured.map(listing => <ListingCard key={listing.id} listing={listing} />)}</div>
+        </div>
+      </section>}
 
       <section className="px-4 py-6 md:py-8">
         <div className="mx-auto max-w-[1280px]">

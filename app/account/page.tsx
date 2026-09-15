@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, LogOut, User, List, FileText } from "lucide-react";
+import { ChevronRight, LogOut, User, List, FileText, Heart } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 
 export default function AccountPage() {
-  const { t, hydrated, user, setUser, listings } = useApp();
+  const { t, hydrated, user, logout, listings } = useApp();
   const router = useRouter();
 
   if (!hydrated) {
@@ -38,18 +38,12 @@ export default function AccountPage() {
     );
   }
 
-  const myListings = listings.filter((l) => {
-    const ownerEmail = user.email.trim().toLowerCase();
-    return (
-      l.sellerId === user.id ||
-      l.sellerEmail?.trim().toLowerCase() === ownerEmail ||
-      l.sellerPhone.trim().toLowerCase() === ownerEmail
-    );
-  });
+  const myListings = listings.filter(l => l.sellerId === user.id);
   const activeCount = myListings.filter((l) => l.status === "active").length;
   const soldCount = myListings.filter((l) => l.status === "sold").length;
 
   const menuItems = [
+    { icon: Heart, label: "Saved Listings", href: "/account/saved" },
     {
       icon: List,
       label: t.myListings,
@@ -132,9 +126,8 @@ export default function AccountPage() {
 
       {/* Sign out */}
       <button
-        onClick={() => {
-          setUser(null);
-          router.push("/");
+        onClick={async () => {
+          if (await logout()) router.push("/");
         }}
         className="mt-6 w-full flex items-center justify-center gap-2 py-3 text-sm text-red-500 font-semibold hover:text-red-700 transition-colors"
       >

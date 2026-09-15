@@ -22,14 +22,14 @@ export default function NewWantedPage() {
   const [description, setDescription] = useState("");
   const [done, setDone] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!category) return;
     if (!user) {
       router.push("/signin?redirect=/wanted/new");
       return;
     }
 
-    addWantedRequest({
+    const created = await addWantedRequest({
       id: `w-${Date.now()}`,
       buyerId: user.id,
       buyerName: user.name,
@@ -44,7 +44,7 @@ export default function NewWantedPage() {
       postedAt: new Date().toISOString(),
       status: "open",
     });
-    setDone(true);
+    if (created) setDone(true);
   };
 
   if (done) {

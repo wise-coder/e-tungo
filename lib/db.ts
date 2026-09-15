@@ -1,9 +1,11 @@
+import "server-only";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { MongoClient, ServerApiVersion, Db } from "mongodb";
 import type { Listing, User, WantedRequest } from "@/lib/types";
 import { createBoostExpiry, sortListingsForMarket } from "@/lib/listing-boost";
+import { deleteEngagement, enrichListings } from "@/lib/engagement";
 
 type ListingRow = {
   id: string;
@@ -26,6 +28,9 @@ type ListingRow = {
   postedAt: string;
   boostedAt: string | null;
   boostExpiresAt: string | null;
+  featuredAt: string | null;
+  featureExpiresAt: string | null;
+  recommended: number | boolean;
   breed: string | null;
   sex: Listing["sex"] | null;
   age: string | null;
@@ -90,6 +95,9 @@ type MongoListingDoc = {
   postedAt: string;
   boostedAt: string | null;
   boostExpiresAt: string | null;
+  featuredAt: string | null;
+  featureExpiresAt: string | null;
+  recommended: boolean;
   breed: string | null;
   sex: Listing["sex"] | null;
   age: string | null;
@@ -139,21 +147,15 @@ export interface BootstrapData {
   wantedRequests: WantedRequest[];
 }
 
-const DB_PATH = path.join(process.cwd(), "data", "e-tungo.sqlite");
 const META_SEED_KEY = "seed_version";
 const DEMO_DATA_VERSION = "3";
 const MONGO_DB_NAME = process.env.MONGODB_DB_NAME?.trim() || "e-tungo";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __eTungoDb: DatabaseSync | undefined;
-  // eslint-disable-next-line no-var
   var __eTungoMongoClient: MongoClient | undefined;
-  // eslint-disable-next-line no-var
   var __eTungoMongoDb: Db | undefined;
-  // eslint-disable-next-line no-var
   var __eTungoMongoInitialized: boolean | undefined;
-  // eslint-disable-next-line no-var
   var __eTungoMongoSetup: Promise<void> | undefined;
 }
 
@@ -167,21 +169,19 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-function emailToName(email: string) {
-  return email.split("@")[0]?.replace(/[._-]+/g, " ").trim() || "Member";
-}
-
 function isMongoMode() {
   return Boolean(getMongoUri());
 }
 
-function ensureLocalDb() {
+export function ensureLocalDb() {
   if (!globalThis.__eTungoDb) {
+    const DB_PATH = process.env.SQLITE_PATH || path.join(process.cwd(), "data", "e-tungo.sqlite");
     mkdirSync(path.dirname(DB_PATH), { recursive: true });
     const db = new DatabaseSync(DB_PATH);
     db.exec(`
       PRAGMA journal_mode = WAL;
       PRAGMA foreign_keys = ON;
+      PRAGMA busy_timeout = 5000;
 
       CREATE TABLE IF NOT EXISTS meta (
         key TEXT PRIMARY KEY,
@@ -209,6 +209,9 @@ function ensureLocalDb() {
       postedAt TEXT NOT NULL,
       boostedAt TEXT,
       boostExpiresAt TEXT,
+      featuredAt TEXT,
+      featureExpiresAt TEXT,
+      recommended INTEGER NOT NULL DEFAULT 0,
       breed TEXT,
         sex TEXT,
         age TEXT,
@@ -262,6 +265,9 @@ function ensureLocalDb() {
     if (!tableInfo.some((column) => column.name === "boostExpiresAt")) {
       db.exec("ALTER TABLE listings ADD COLUMN boostExpiresAt TEXT");
     }
+    if (!tableInfo.some((column) => column.name === "featuredAt")) db.exec("ALTER TABLE listings ADD COLUMN featuredAt TEXT");
+    if (!tableInfo.some((column) => column.name === "featureExpiresAt")) db.exec("ALTER TABLE listings ADD COLUMN featureExpiresAt TEXT");
+    if (!tableInfo.some((column) => column.name === "recommended")) db.exec("ALTER TABLE listings ADD COLUMN recommended INTEGER NOT NULL DEFAULT 0");
     initializeLocalDb(db);
     globalThis.__eTungoDb = db;
   }
@@ -274,28 +280,6 @@ function initializeLocalDb(db: DatabaseSync) {
     .prepare("SELECT value FROM meta WHERE key = ?")
     .get(META_SEED_KEY) as { value: string } | undefined;
   if (seeded?.value === DEMO_DATA_VERSION) return;
-
-  const listingCount = db.prepare("SELECT COUNT(*) AS count FROM listings").get() as {
-    count: number;
-  };
-  const wantedCount = db.prepare("SELECT COUNT(*) AS count FROM wanted_requests").get() as {
-    count: number;
-  };
-
-  if (listingCount.count > 0 || wantedCount.count > 0) {
-    db.exec("BEGIN");
-    try {
-      db.exec("DELETE FROM listings");
-      db.exec("DELETE FROM wanted_requests");
-      db.exec("DELETE FROM meta");
-      db.prepare("INSERT INTO meta (key, value) VALUES (?, ?)").run(META_SEED_KEY, DEMO_DATA_VERSION);
-      db.exec("COMMIT");
-    } catch (error) {
-      db.exec("ROLLBACK");
-      throw error;
-    }
-    return;
-  }
 
   db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)").run(META_SEED_KEY, DEMO_DATA_VERSION);
 }
@@ -322,6 +306,9 @@ function listingToLocalParams(listing: Listing) {
     postedAt: listing.postedAt,
     boostedAt: listing.boostedAt ?? null,
     boostExpiresAt: listing.boostExpiresAt ?? null,
+    featuredAt: listing.featuredAt ?? null,
+    featureExpiresAt: listing.featureExpiresAt ?? null,
+    recommended: listing.recommended ? 1 : 0,
     breed: listing.breed ?? null,
     sex: listing.sex ?? null,
     age: listing.age ?? null,
@@ -392,6 +379,9 @@ function listingToMongoDoc(listing: Listing): MongoListingDoc {
     postedAt: listing.postedAt,
     boostedAt: listing.boostedAt ?? null,
     boostExpiresAt: listing.boostExpiresAt ?? null,
+    featuredAt: listing.featuredAt ?? null,
+    featureExpiresAt: listing.featureExpiresAt ?? null,
+    recommended: Boolean(listing.recommended),
     breed: listing.breed ?? null,
     sex: listing.sex ?? null,
     age: listing.age ?? null,
@@ -462,6 +452,9 @@ function listingFromMongoDoc(doc: MongoListingDoc): Listing {
     postedAt: doc.postedAt,
     boostedAt: doc.boostedAt ?? undefined,
     boostExpiresAt: doc.boostExpiresAt ?? undefined,
+    featuredAt: doc.featuredAt ?? undefined,
+    featureExpiresAt: doc.featureExpiresAt ?? undefined,
+    recommended: Boolean(doc.recommended),
     breed: doc.breed ?? undefined,
     sex: doc.sex ?? undefined,
     age: doc.age ?? undefined,
@@ -532,27 +525,6 @@ function listingSellerEmail(row: Pick<ListingRow, "sellerEmail" | "sellerPhone">
   return phone.includes("@") ? phone : undefined;
 }
 
-async function getLatestListingForEmail(email: string) {
-  const normalized = normalizeEmail(email);
-
-  if (isMongoMode()) {
-    const { listings } = await getMongoCollections();
-    return listings.findOne({
-      $or: [
-        { sellerEmail: normalized },
-        { sellerPhone: normalized },
-      ],
-    }, { sort: { postedAt: -1 } });
-  }
-
-  const db = ensureLocalDb();
-  return db
-    .prepare(
-      "SELECT * FROM listings WHERE lower(COALESCE(sellerEmail, '')) = ? OR lower(sellerPhone) = ? ORDER BY postedAt DESC LIMIT 1"
-    )
-    .get(normalized, normalized) as ListingRow | undefined;
-}
-
 function getMongoClient() {
   const uri = getMongoUri();
   if (!uri) return null;
@@ -565,13 +537,15 @@ function getMongoClient() {
         deprecationErrors: true,
       },
       maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5_000,
+      connectTimeoutMS: 5_000,
     });
   }
 
   return globalThis.__eTungoMongoClient;
 }
 
-async function getMongoDb() {
+export async function getMongoDb() {
   const client = getMongoClient();
   if (!client) return null;
 
@@ -587,6 +561,8 @@ async function ensureMongoIndexes(db: Db) {
   const listings = db.collection<MongoListingDoc>("listings");
   const wantedRequests = db.collection<MongoWantedRequestDoc>("wanted_requests");
   const users = db.collection<MongoUserDoc>("users");
+  const events = db.collection("listing_events");
+  const saves = db.collection("listing_saves");
 
   await Promise.all([
     listings.createIndex({ postedAt: -1 }),
@@ -599,6 +575,10 @@ async function ensureMongoIndexes(db: Db) {
     wantedRequests.createIndex({ status: 1 }),
     wantedRequests.createIndex({ category: 1 }),
     users.createIndex({ email: 1 }, { unique: true }),
+    events.createIndex({ listingId: 1, action: 1, createdAt: -1 }),
+    events.createIndex({ visitorKey: 1, action: 1 }),
+    saves.createIndex({ listingId: 1 }),
+    saves.createIndex({ userId: 1, createdAt: -1 }),
   ]);
 }
 
@@ -613,19 +593,6 @@ async function ensureMongoSeeded(db: Db) {
   if (seeded?.value === DEMO_DATA_VERSION) {
     globalThis.__eTungoMongoInitialized = true;
     return;
-  }
-
-  const [listingCount, wantedCount] = await Promise.all([
-    listings.countDocuments(),
-    wantedRequests.countDocuments(),
-  ]);
-
-  if (listingCount > 0 || wantedCount > 0) {
-    await Promise.all([
-      listings.deleteMany({}),
-      wantedRequests.deleteMany({}),
-      meta.deleteMany({}),
-    ]);
   }
 
   await meta.updateOne(
@@ -647,7 +614,13 @@ async function ensureMongoSetup() {
     })();
   }
 
-  await globalThis.__eTungoMongoSetup;
+  try {
+    await globalThis.__eTungoMongoSetup;
+  } catch (error) {
+    // A failed first connection must not pin every later request to a rejected promise.
+    globalThis.__eTungoMongoSetup = undefined;
+    throw error;
+  }
 }
 
 async function getMongoCollections() {
@@ -676,7 +649,7 @@ export async function getBootstrapData(): Promise<BootstrapData> {
     ]);
 
     return {
-      listings: sortListingsForMarket(listingDocs.map(listingFromMongoDoc)),
+      listings: sortListingsForMarket(await enrichListings(listingDocs.map(listingFromMongoDoc))),
       wantedRequests: wantedDocs.map(wantedFromMongoDoc),
     };
   }
@@ -690,7 +663,7 @@ export async function getBootstrapData(): Promise<BootstrapData> {
     .all() as WantedRequestRow[];
 
   return {
-    listings: sortListingsForMarket(listingRows.map(listingFromRow)),
+    listings: sortListingsForMarket(await enrichListings(listingRows.map(listingFromRow))),
     wantedRequests: wantedRows.map(wantedFromRow),
   };
 }
@@ -764,77 +737,18 @@ export async function getAllUsers(): Promise<User[]> {
   return rows.map(userFromRow);
 }
 
-export async function resolveUserByEmail(email: string): Promise<User | null> {
-  const normalized = normalizeEmail(email);
-  const existing = await getUserByEmail(normalized);
-  if (existing) return existing;
-
-  const legacyListing = await getLatestListingForEmail(normalized);
-  if (!legacyListing) return null;
-
-  const sellerId = legacyListing.sellerId?.trim() || `seller-${normalized}`;
-  const resolved: User = {
-    id: sellerId,
-    name: legacyListing.sellerName?.trim() || emailToName(normalized),
-    email: normalized,
-    phone: legacyListing.sellerPhone.includes("@") ? undefined : legacyListing.sellerPhone,
-    district: legacyListing.sellerDistrict?.trim() || legacyListing.district,
-    userType: "farmer",
-    phoneVerified: false,
-    createdAt: legacyListing.postedAt || new Date().toISOString(),
-  };
-
-  await upsertUser(resolved);
-  return resolved;
-}
-
 export async function getListingsBySellerId(sellerId: string): Promise<Listing[]> {
   if (isMongoMode()) {
     const { listings } = await getMongoCollections();
     const docs = await listings.find({ sellerId }).sort({ postedAt: -1 }).toArray();
-    return docs.map(listingFromMongoDoc);
+    return enrichListings(docs.map(listingFromMongoDoc));
   }
 
   const db = ensureLocalDb();
   const rows = db
     .prepare("SELECT * FROM listings WHERE sellerId = ? ORDER BY postedAt DESC")
     .all(sellerId) as ListingRow[];
-  return rows.map(listingFromRow);
-}
-
-export async function getListingsBySellerIdentity(
-  sellerId: string,
-  email?: string
-): Promise<Listing[]> {
-  const normalized = email ? normalizeEmail(email) : undefined;
-
-  if (isMongoMode()) {
-    const { listings } = await getMongoCollections();
-    const filters: Array<Record<string, unknown>> = [{ sellerId }];
-    if (normalized) {
-      filters.push({ sellerEmail: normalized }, { sellerPhone: normalized });
-    }
-    const docs =
-      filters.length === 1
-        ? await listings.find(filters[0]).sort({ postedAt: -1 }).toArray()
-        : await listings.find({ $or: filters }).sort({ postedAt: -1 }).toArray();
-    return docs.map(listingFromMongoDoc);
-  }
-
-  const db = ensureLocalDb();
-  if (normalized) {
-    const rows = db
-      .prepare(
-        "SELECT * FROM listings WHERE sellerId = ? OR lower(COALESCE(sellerEmail, '')) = ? OR lower(sellerPhone) = ? ORDER BY postedAt DESC"
-      )
-      .all(sellerId, normalized, normalized) as ListingRow[];
-    return rows.map(listingFromRow);
-  }
-
-  const rows = db
-    .prepare("SELECT * FROM listings WHERE sellerId = ? ORDER BY postedAt DESC")
-    .all(sellerId) as ListingRow[];
-  return rows.map(listingFromRow);
+  return enrichListings(rows.map(listingFromRow));
 }
 
 export async function createListing(listing: Listing): Promise<Listing> {
@@ -849,13 +763,13 @@ export async function createListing(listing: Listing): Promise<Listing> {
     INSERT INTO listings (
       id, sellerId, sellerName, sellerEmail, sellerPhone, sellerPhoneVerified, sellerDistrict,
       category, title, price, priceUnit, quantity, district, sector, images,
-      status, views, postedAt, boostedAt, boostExpiresAt, breed, sex, age, weight, milkProduction,
+      status, views, postedAt, boostedAt, boostExpiresAt, featuredAt, featureExpiresAt, recommended, breed, sex, age, weight, milkProduction,
       vaccinationStatus, purpose, chickenType, litresAvailable, milkAvailability,
       traysAvailable, description
     ) VALUES (
       @id, @sellerId, @sellerName, @sellerEmail, @sellerPhone, @sellerPhoneVerified, @sellerDistrict,
       @category, @title, @price, @priceUnit, @quantity, @district, @sector, @images,
-      @status, @views, @postedAt, @boostedAt, @boostExpiresAt, @breed, @sex, @age, @weight, @milkProduction,
+      @status, @views, @postedAt, @boostedAt, @boostExpiresAt, @featuredAt, @featureExpiresAt, @recommended, @breed, @sex, @age, @weight, @milkProduction,
       @vaccinationStatus, @purpose, @chickenType, @litresAvailable, @milkAvailability,
       @traysAvailable, @description
     )
@@ -887,6 +801,7 @@ export async function updateListing(id: string, updates: Partial<Listing>): Prom
     UPDATE listings SET
       sellerId = @sellerId,
       sellerName = @sellerName,
+      sellerEmail = @sellerEmail,
       sellerPhone = @sellerPhone,
       sellerPhoneVerified = @sellerPhoneVerified,
       sellerDistrict = @sellerDistrict,
@@ -903,6 +818,9 @@ export async function updateListing(id: string, updates: Partial<Listing>): Prom
       postedAt = @postedAt,
       boostedAt = @boostedAt,
       boostExpiresAt = @boostExpiresAt,
+      featuredAt = @featuredAt,
+      featureExpiresAt = @featureExpiresAt,
+      recommended = @recommended,
       breed = @breed,
       sex = @sex,
       age = @age,
@@ -922,6 +840,7 @@ export async function updateListing(id: string, updates: Partial<Listing>): Prom
 }
 
 export async function deleteListing(id: string) {
+  await deleteEngagement(id);
   if (isMongoMode()) {
     const { listings } = await getMongoCollections();
     await listings.deleteOne({ _id: id });
@@ -936,12 +855,12 @@ export async function getListingById(id: string): Promise<Listing | null> {
   if (isMongoMode()) {
     const { listings } = await getMongoCollections();
     const doc = await listings.findOne({ _id: id });
-    return doc ? listingFromMongoDoc(doc) : null;
+    return doc ? (await enrichListings([listingFromMongoDoc(doc)]))[0] : null;
   }
 
   const db = ensureLocalDb();
   const row = db.prepare("SELECT * FROM listings WHERE id = ?").get(id) as ListingRow | undefined;
-  return row ? listingFromRow(row) : null;
+  return row ? (await enrichListings([listingFromRow(row)]))[0] : null;
 }
 
 export async function confirmListingBoost(id: string): Promise<Listing | null> {
@@ -966,7 +885,7 @@ export async function confirmListingBoost(id: string): Promise<Listing | null> {
       boostedAt = @boostedAt,
       boostExpiresAt = @boostExpiresAt
     WHERE id = @id
-  `).run(listingToLocalParams(next));
+  `).run({ id, boostedAt: next.boostedAt!, boostExpiresAt: next.boostExpiresAt! });
 
   return next;
 }
@@ -1082,6 +1001,9 @@ function listingFromRow(row: ListingRow): Listing {
     postedAt: row.postedAt,
     boostedAt: row.boostedAt ?? undefined,
     boostExpiresAt: row.boostExpiresAt ?? undefined,
+    featuredAt: row.featuredAt ?? undefined,
+    featureExpiresAt: row.featureExpiresAt ?? undefined,
+    recommended: Boolean(row.recommended),
     breed: row.breed ?? undefined,
     sex: row.sex ?? undefined,
     age: row.age ?? undefined,

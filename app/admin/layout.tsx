@@ -6,8 +6,8 @@ import { getAdminEmailFromCookies } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
-  const adminEmail = getAdminEmailFromCookies(cookies());
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  const adminEmail = await getAdminEmailFromCookies(await cookies());
 
   if (!adminEmail) {
     redirect("/signin?redirect=/admin");

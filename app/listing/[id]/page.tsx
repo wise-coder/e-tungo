@@ -3,22 +3,75 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, MapPin, Clock, Share2, Flag, ShieldCheck, Eye } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Share2, Flag, ShieldCheck, Eye, Heart } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import PhoneContactButtons from "@/components/PhoneContactButtons";
 import CategoryIcon from "@/components/CategoryIcon";
 import { formatPrice, formatTimeAgo, getCategoryLabel } from "@/lib/utils";
-import type { User } from "@/lib/types";
+import type { User, Listing } from "@/lib/types";
+import { listingBadges } from "@/lib/marketplace-badges";
+
+const recentOpens = new Map<string, number>();
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { t, lang, listings } = useApp();
+  const { t, lang, listings, setListings, user } = useApp();
   const router = useRouter();
   const [activeImage, setActiveImage] = useState(0);
   const [shareMsg, setShareMsg] = useState(false);
   const [sellerProfile, setSellerProfile] = useState<User | null>(null);
+  const [fetchedListing, setFetchedListing] = useState<Listing | null>(null);
+  const [loadingListing, setLoadingListing] = useState(true);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
-  const listing = listings.find((l) => l.id === id);
+  const listing = listings.find((l) => l.id === id) ?? (fetchedListing?.id === id ? fetchedListing : null);
+
+  useEffect(() => {
+    if (listings.some(item => item.id === id)) { setLoadingListing(false); return; }
+    let active = true;
+    setLoadingListing(true);
+    void fetch(`/api/listings/${encodeURIComponent(id)}`, { cache: "no-store" })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => { if (active) setFetchedListing(data); })
+      .catch(() => { if (active) setFetchedListing(null); })
+      .finally(() => { if (active) setLoadingListing(false); });
+    return () => { active = false; };
+  }, [id, listings]);
+
+  const sendEngagement = async (action: "view" | "save" | "call" | "whatsapp" | "share") => {
+    try {
+      const response = await fetch(`/api/listings/${encodeURIComponent(id)}/engagement`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action }),
+      });
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (data.listing) setListings(current => current.map(item => item.id === id ? data.listing : item));
+      return data;
+    } catch { return null; }
+  };
+
+  useEffect(() => {
+    if (!id) return;
+    const last = recentOpens.get(id) ?? 0;
+    if (Date.now() - last > 2000) {
+      recentOpens.set(id, Date.now());
+      void fetch(`/api/listings/${encodeURIComponent(id)}/engagement`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "view" }),
+      }).then(response => response.ok ? response.json() : null)
+        .then(data => { if (data?.listing) setListings(current => current.map(item => item.id === id ? data.listing : item)); })
+        .catch(() => {});
+    }
+  }, [id, setListings]);
+
+  useEffect(() => {
+    if (!id) return;
+    void fetch(`/api/listings/${encodeURIComponent(id)}/engagement`, { cache: "no-store" })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => setSaved(Boolean(data?.saved)))
+      .catch(() => setSaved(false));
+  }, [id, user?.id]);
 
   useEffect(() => {
     if (!listing) return;
@@ -41,6 +94,7 @@ export default function ListingDetailPage() {
   }, [listing]);
 
   if (!listing) {
+    if (loadingListing) return <div className="mx-auto max-w-2xl px-4 py-16 text-center text-gray-500">Loading listing...</div>;
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <p className="text-5xl mb-4">🐄</p>
@@ -56,6 +110,7 @@ export default function ListingDetailPage() {
   }
 
   const handleShare = async () => {
+    void sendEngagement("share");
     if (navigator.share) {
       try {
         await navigator.share({
@@ -65,7 +120,7 @@ export default function ListingDetailPage() {
         });
       } catch {/* cancelled */}
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(window.location.href);
       setShareMsg(true);
       setTimeout(() => setShareMsg(false), 2000);
     }
@@ -166,8 +221,24 @@ export default function ListingDetailPage() {
             </h1>
             <span className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0 mt-1">
               <Eye size={13} />
-              {listing.views}
+              {listing.views} views
             </span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {listingBadges(listing).map(badge => <span key={badge} className="rounded-full bg-[#eff5ef] px-2.5 py-1 text-xs font-semibold text-[#375d3f]">{badge}</span>)}
+            <span className="text-xs text-gray-500">♡ {listing.saves ?? 0} saves</span>
+            <button type="button" disabled={saving} aria-pressed={saved}
+              onClick={async () => {
+                if (!user) { router.push(`/signin?redirect=/listing/${encodeURIComponent(id)}`); return; }
+                setSaving(true);
+                setSaveError("");
+                try { const data = await sendEngagement("save"); if (data) setSaved(Boolean(data.saved)); else setSaveError("Could not update saved listing. Please try again."); }
+                finally { setSaving(false); }
+              }}
+              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${saved ? "border-red-200 bg-red-50 text-red-600" : "border-gray-200 text-gray-600"}`}>
+              <Heart size={14} fill={saved ? "currentColor" : "none"} /> {saved ? "Saved" : "Save"}
+            </button>
+            {saveError && <span role="alert" className="text-xs text-red-600">{saveError}</span>}
           </div>
           <p className="text-2xl font-bold text-brand-700 mt-1">
             {formatPrice(listing.price)}
@@ -266,6 +337,8 @@ export default function ListingDetailPage() {
         {/* Contact buttons */}
         {listing.status !== "sold" && (
           <PhoneContactButtons
+            onCall={() => { void sendEngagement("call"); }}
+            onWhatsApp={() => { void sendEngagement("whatsapp"); }}
             phone={listing.sellerPhone}
             sellerName={listing.sellerName}
             listingTitle={listing.title}

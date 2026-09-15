@@ -1,8 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight, Eye, ImageIcon, MapPin, Package } from "lucide-react";
 import { formatPrice, formatTimeAgo } from "@/lib/utils";
 import { loadAdminDashboardData } from "@/lib/admin-dashboard-data";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
+import AdminListingControls from "@/components/AdminListingControls";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +21,7 @@ export default async function AdminListingsPage() {
             </p>
             <h1 className="mt-2 text-3xl font-black tracking-tight text-[#262424]">Listings</h1>
             <p className="mt-2 text-sm leading-6 text-[#6f655c]">
-              Review product posts on their own page and remove anything that is no longer needed.
+              Review engagement, status, and visibility for each product.
             </p>
           </div>
           <div className="flex gap-2 text-sm">
@@ -42,9 +44,12 @@ export default async function AdminListingsPage() {
             <div className="flex items-start gap-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#faf8f4] text-[#375d3f]">
                 {listing.images[0] ? (
-                  <img
+                  <Image
                     src={listing.images[0]}
                     alt={listing.title}
+                    width={64}
+                    height={64}
+                    unoptimized
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -73,8 +78,11 @@ export default async function AdminListingsPage() {
                   </div>
                   <div className="inline-flex items-center gap-2">
                     <Eye size={15} className="text-[#375d3f]" />
-                    {listing.views} views
+                    {listing.views} views · {listing.uniqueViews ?? 0} unique
                   </div>
+                  <div>♡ {listing.saves ?? 0} saves</div>
+                  <div>📞 {listing.calls ?? 0} calls · 💬 {listing.whatsappClicks ?? 0} WhatsApp</div>
+                  <div>{listing.shares ?? 0} shares</div>
                   <div className="font-semibold text-[#262424]">
                     {formatPrice(listing.price)}
                   </div>
@@ -100,10 +108,10 @@ export default async function AdminListingsPage() {
                 />
               </div>
             </div>
+            <AdminListingControls listing={listing} />
           </article>
         ))}
       </section>
     </div>
   );
 }
-

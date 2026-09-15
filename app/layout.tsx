@@ -26,12 +26,19 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { listings, wantedRequests } = await getBootstrapData();
+  let listings: Awaited<ReturnType<typeof getBootstrapData>>["listings"] = [];
+  let wantedRequests: Awaited<ReturnType<typeof getBootstrapData>>["wantedRequests"] = [];
+  try {
+    ({ listings, wantedRequests } = await getBootstrapData());
+  } catch (error) {
+    // Public pages, including signup, must still render during a transient DB outage.
+    console.error("Marketplace bootstrap unavailable:", error);
+  }
 
   return (
     <html lang="rw">
       <body>
-        <AppProvider initialListings={listings} initialWantedRequests={wantedRequests}>
+        <AppProvider initialListings={listings.filter(listing => listing.status !== "hidden")} initialWantedRequests={wantedRequests}>
           <div className="min-h-screen flex flex-col">
             <Header />
             <main className="flex-1 pb-20 md:pb-0">{children}</main>

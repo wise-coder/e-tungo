@@ -13,7 +13,7 @@ import type { Listing } from "@/lib/types";
 import { formatPrice, formatTimeAgo } from "@/lib/utils";
 
 export default function MyListingsPage() {
-  const { t, lang, hydrated, user, deleteListing } = useApp();
+  const { t, lang, hydrated, user, deleteListing, updateListing } = useApp();
   const router = useRouter();
 
   const [confirmSoldId, setConfirmSoldId] = useState<string | null>(null);
@@ -34,7 +34,6 @@ export default function MyListingsPage() {
 
     const params = new URLSearchParams({
       sellerId: user.id,
-      email: user.email,
     });
 
     fetch(`/api/listings?${params.toString()}`)
@@ -56,7 +55,7 @@ export default function MyListingsPage() {
     return () => {
       cancelled = true;
     };
-  }, [hydrated, user?.email, user?.id]);
+  }, [hydrated, user]);
 
   if (!hydrated) {
     return (
@@ -155,12 +154,10 @@ export default function MyListingsPage() {
                     <p className="text-brand-700 font-bold text-sm mt-0.5">
                       {formatPrice(listing.price)}
                     </p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <Eye size={11} />
-                        {listing.views} {t.views}
-                      </span>
-                      <span>{formatTimeAgo(listing.postedAt, lang)}</span>
+                    <div className="mt-1 space-y-0.5 text-xs text-gray-500">
+                      <p><Eye size={11} className="mr-1 inline" />{listing.views} views · {listing.uniqueViews ?? 0} unique · ♡ {listing.saves ?? 0} saves</p>
+                      <p>📞 {listing.calls ?? 0} calls · 💬 {listing.whatsappClicks ?? 0} WhatsApp clicks · {listing.shares ?? 0} shares</p>
+                      <p>{formatTimeAgo(listing.postedAt, lang)}</p>
                     </div>
                   </div>
                 </div>
@@ -200,12 +197,9 @@ export default function MyListingsPage() {
         isOpen={!!confirmSoldId}
         title={t.confirmMarkSold}
         onCancel={() => setConfirmSoldId(null)}
-        onConfirm={() => {
-          if (confirmSoldId) {
-            deleteListing(confirmSoldId);
-            setOwnedListings((prev) =>
-              prev?.filter((listing) => listing.id !== confirmSoldId) ?? prev
-            );
+        onConfirm={async () => {
+          if (confirmSoldId && await updateListing(confirmSoldId, { status: "sold" })) {
+            setOwnedListings(prev => prev?.map(listing => listing.id === confirmSoldId ? { ...listing, status: "sold" } : listing) ?? prev);
           }
           setConfirmSoldId(null);
         }}
@@ -216,9 +210,8 @@ export default function MyListingsPage() {
         isOpen={!!confirmDeleteId}
         title="Are you sure you want to delete this listing?"
         onCancel={() => setConfirmDeleteId(null)}
-        onConfirm={() => {
-          if (confirmDeleteId) {
-            deleteListing(confirmDeleteId);
+        onConfirm={async () => {
+          if (confirmDeleteId && await deleteListing(confirmDeleteId)) {
             setOwnedListings((prev) =>
               prev?.filter((listing) => listing.id !== confirmDeleteId) ?? prev
             );

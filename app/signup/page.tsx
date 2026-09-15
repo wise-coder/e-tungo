@@ -3,44 +3,27 @@
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Mail, Lock, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User as UserIcon, Phone } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useApp } from "@/context/AppContext";
-import type { User } from "@/lib/types";
-import { userIdFromEmail } from "@/lib/user-utils";
-
-const ADMIN_EMAIL = (process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "tungatechnologies@gmail.com")
-  .trim()
-  .toLowerCase();
-
-function buildUser(email: string, district: string, name: string, existing?: User): User {
-  return {
-    id: existing?.id ?? userIdFromEmail(email),
-    name: name.trim() || existing?.name || email.split("@")[0] || "Member",
-    email: email.trim(),
-    district,
-    userType: existing?.userType ?? "farmer",
-    phone: existing?.phone,
-    phoneVerified: existing?.phoneVerified ?? false,
-    createdAt: existing?.createdAt ?? new Date().toISOString(),
-    profileImage: existing?.profileImage,
-    bio: existing?.bio,
-  };
-}
+import { safeRedirect } from "@/lib/auth-client";
+import { normalizeRwandaMobile } from "@/lib/phone";
 
 export default function SignUpPage() {
   const { t, setUser } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const redirect = searchParams.get("redirect") ?? "/account";
+  const redirect = safeRedirect(searchParams.get("redirect"));
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [district, setDistrict] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const handleCreate = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -50,6 +33,10 @@ export default function SignUpPage() {
     }
     if (!email.trim()) {
       setError("Please enter your email.");
+      return;
+    }
+    if (!normalizeRwandaMobile(phone)) {
+      setError("Enter a valid Rwanda mobile number, such as 0781234567.");
       return;
     }
     if (!district) {
@@ -64,15 +51,26 @@ export default function SignUpPage() {
       setError("Passwords do not match.");
       return;
     }
-    if (email.trim().toLowerCase() === ADMIN_EMAIL) {
-      setError("That email is reserved for admin access.");
+    if (password.length < 15 || password.length > 128) {
+      setError("Use a password with 15–128 characters.");
       return;
     }
-
-    const response = await fetch(`/api/users?email=${encodeURIComponent(email.trim())}`);
-    const existing = response.ok ? ((await response.json()) as User | null) : null;
-    setUser(buildUser(email, district, name, existing ?? undefined));
-    router.push(redirect);
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, district, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to register.");
+      setUser(data.user);
+      setPassword("");
+      setConfirmPassword("");
+      router.push(data.admin ? "/admin" : redirect);
+      router.refresh();
+    } catch (error) { setError(error instanceof Error ? error.message : "Unable to register."); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -145,6 +143,17 @@ export default function SignUpPage() {
                 </div>
               </div>
 
+              <div>
+                <label htmlFor="signup-phone" className="mb-1.5 block text-sm font-semibold text-gray-700">Mobile number <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <Phone size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input id="signup-phone" type="tel" inputMode="tel" autoComplete="tel" required
+                    value={phone} onChange={event => { setPhone(event.target.value); setError(""); }}
+                    placeholder="078 123 4567" className="input-field pl-11" />
+                </div>
+                <p className="mt-1 text-xs text-gray-500">Buyers will use this number to call or WhatsApp you about your listings.</p>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1.5 block text-sm font-semibold text-gray-700">
@@ -164,6 +173,8 @@ export default function SignUpPage() {
                       }}
                       placeholder="Password"
                       autoComplete="new-password"
+                      minLength={15}
+                      maxLength={128}
                       className="input-field pl-11"
                     />
                   </div>
@@ -213,10 +224,11 @@ export default function SignUpPage() {
                 </select>
               </div>
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
 
               <button
                 type="submit"
+                disabled={busy}
                 className="w-full rounded-2xl bg-brand-700 px-4 py-3.5 font-bold text-white transition-colors hover:bg-brand-800"
               >
                 {t.signUpWithEmail}

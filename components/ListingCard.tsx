@@ -6,7 +6,7 @@ import { Listing } from "@/lib/types";
 import { formatPrice, formatTimeAgo, getCategoryLabel } from "@/lib/utils";
 import { useApp } from "@/context/AppContext";
 import CategoryIcon from "./CategoryIcon";
-import { isListingBoostActive } from "@/lib/listing-boost";
+import { listingBadges } from "@/lib/marketplace-badges";
 
 interface ListingCardProps {
   listing: Listing;
@@ -15,7 +15,7 @@ interface ListingCardProps {
 
 export default function ListingCard({ listing, compact = false }: ListingCardProps) {
   const { lang, t } = useApp();
-  const boosted = isListingBoostActive(listing);
+  const badges = listingBadges(listing);
 
   return (
     <Link
@@ -52,13 +52,9 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
             {getCategoryLabel(listing.category, lang)}
           </span>
         </div>
-        {boosted && (
-          <div className="absolute top-2 right-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#375d3f]/95 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-              Boosted
-            </span>
-          </div>
-        )}
+        {badges.length > 0 && <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+          {badges.map(badge => <span key={badge} className="rounded-full bg-[#375d3f]/95 px-2.5 py-1 text-[10px] font-semibold text-white">{badge}</span>)}
+        </div>}
       </div>
 
       {/* Info */}
@@ -74,6 +70,7 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
             </span>
           )}
         </p>
+        <p className="mt-2 text-xs text-gray-500">👁 {listing.views} views · ♡ {listing.saves ?? 0} saves</p>
         <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
           <span className="flex items-center gap-1.5">
             <MapPin size={12} />

@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 const shortcuts = [
   { href: "/admin/users", label: "Users", icon: Users, description: "See every account." },
   { href: "/admin/listings", label: "Listings", icon: ClipboardList, description: "Review product posts." },
+  { href: "/admin/analytics", label: "Marketplace Analytics", icon: BarChart3, description: "See real views, saves, contacts, and trends." },
   { href: "/admin/requests", label: "Requests", icon: Megaphone, description: "Track buyer requests." },
   { href: "/admin/boosts", label: "Boost review", icon: BarChart3, description: "Prepare paid verification." },
 ];

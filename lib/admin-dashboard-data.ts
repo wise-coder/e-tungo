@@ -1,3 +1,7 @@
+import "server-only";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { getAdminEmailFromCookies } from "./admin-auth";
 import { getAllUsers, getBootstrapData } from "@/lib/db";
 
 export type AdminActivityKind = "user" | "listing" | "request";
@@ -12,6 +16,7 @@ export type AdminActivityItem = {
 };
 
 export async function loadAdminDashboardData() {
+  if (!await getAdminEmailFromCookies(await cookies())) redirect("/signin?redirect=/admin");
   const [users, bootstrap] = await Promise.all([getAllUsers(), getBootstrapData()]);
   const { listings, wantedRequests } = bootstrap;
 
