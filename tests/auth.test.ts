@@ -220,6 +220,18 @@ test("protected APIs derive ownership and privilege from sessions, never request
   const fields = await publicProfile.json();
   assert.equal(fields.email, undefined); assert.equal(fields.passwordHash, undefined);
 });
+test("database-designated administrators receive admin sessions and cannot self-assign the role", async () => {
+  const account = await enroll("database-admin@example.com");
+  assert.equal(account.body.admin, false);
+  await upsertUser({ ...account.body.user, isAdmin: true });
+  const loggedIn = await signIn("database-admin@example.com");
+  assert.equal(loggedIn.body.admin, true);
+  assert.equal((await sessionIdentity(loggedIn.cookie.split("=")[1]))!.admin, true);
+
+  const updated = await userPut(request("/users", { isAdmin: false, name: "Database Admin" }, loggedIn.cookie));
+  assert.equal(updated.status, 200);
+  assert.equal((await getUserById(account.body.user.id))!.isAdmin, true);
+});
 test("CSRF, malformed input and unsafe redirects fail closed", async () => {
   assert.equal((await handlers.login(request("/login", {}, undefined, "POST", "https://evil.example"))).status, 403);
   const noOrigin = request("/login", {}); noOrigin.headers.delete("origin");

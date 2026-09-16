@@ -65,6 +65,7 @@ type UserRow = {
   id: string;
   name: string;
   email: string;
+  isAdmin: number | boolean;
   phone: string | null;
   district: string;
   userType: User["userType"];
@@ -116,6 +117,7 @@ type MongoUserDoc = {
   _id: string;
   name: string;
   email: string;
+  isAdmin?: boolean;
   phone: string | null;
   district: string;
   userType: User["userType"];
@@ -246,6 +248,7 @@ export function ensureLocalDb() {
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
+        isAdmin INTEGER NOT NULL DEFAULT 0,
         phone TEXT,
         district TEXT NOT NULL,
         userType TEXT NOT NULL,
@@ -268,6 +271,8 @@ export function ensureLocalDb() {
     if (!tableInfo.some((column) => column.name === "featuredAt")) db.exec("ALTER TABLE listings ADD COLUMN featuredAt TEXT");
     if (!tableInfo.some((column) => column.name === "featureExpiresAt")) db.exec("ALTER TABLE listings ADD COLUMN featureExpiresAt TEXT");
     if (!tableInfo.some((column) => column.name === "recommended")) db.exec("ALTER TABLE listings ADD COLUMN recommended INTEGER NOT NULL DEFAULT 0");
+    const userTableInfo = db.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;
+    if (!userTableInfo.some((column) => column.name === "isAdmin")) db.exec("ALTER TABLE users ADD COLUMN isAdmin INTEGER NOT NULL DEFAULT 0");
     initializeLocalDb(db);
     globalThis.__eTungoDb = db;
   }
@@ -347,6 +352,7 @@ function userToLocalParams(user: User) {
     id: user.id,
     name: user.name,
     email: user.email,
+    isAdmin: user.isAdmin ? 1 : 0,
     phone: user.phone ?? null,
     district: user.district,
     userType: user.userType,
@@ -402,6 +408,7 @@ function userToMongoDoc(user: User): MongoUserDoc {
     _id: user.id,
     name: user.name,
     email: user.email,
+    isAdmin: Boolean(user.isAdmin),
     phone: user.phone ?? null,
     district: user.district,
     userType: user.userType,
@@ -493,6 +500,7 @@ function userFromRow(row: UserRow): User {
     id: row.id,
     name: row.name,
     email: row.email,
+    isAdmin: Boolean(row.isAdmin),
     phone: row.phone ?? undefined,
     district: row.district,
     userType: row.userType,
@@ -508,6 +516,7 @@ function userFromMongoDoc(doc: MongoUserDoc): User {
     id: doc._id,
     name: doc.name,
     email: doc.email,
+    isAdmin: Boolean(doc.isAdmin),
     phone: doc.phone ?? undefined,
     district: doc.district,
     userType: doc.userType,
@@ -678,13 +687,14 @@ export async function upsertUser(user: User): Promise<User> {
   const db = ensureLocalDb();
   db.prepare(`
     INSERT INTO users (
-      id, name, email, phone, district, userType, phoneVerified, createdAt, profileImage, bio
+      id, name, email, isAdmin, phone, district, userType, phoneVerified, createdAt, profileImage, bio
     ) VALUES (
-      @id, @name, @email, @phone, @district, @userType, @phoneVerified, @createdAt, @profileImage, @bio
+      @id, @name, @email, @isAdmin, @phone, @district, @userType, @phoneVerified, @createdAt, @profileImage, @bio
     )
     ON CONFLICT(id) DO UPDATE SET
       name = excluded.name,
       email = excluded.email,
+      isAdmin = excluded.isAdmin,
       phone = excluded.phone,
       district = excluded.district,
       userType = excluded.userType,

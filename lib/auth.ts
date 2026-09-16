@@ -23,9 +23,10 @@ export function normalizeEmail(value: unknown) {
   if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new AuthError(400, "Enter a valid email address.");
   return email;
 }
-export function isAdminUser(id: string) {
+export function isAdminUser(user: string | Pick<User, "id" | "isAdmin">) {
+  const id = typeof user === "string" ? user : user.id;
   const configured = process.env.ADMIN_USER_ID?.trim();
-  return Boolean(configured) && id === configured;
+  return (typeof user !== "string" && user.isAdmin === true) || (Boolean(configured) && id === configured);
 }
 export class AuthError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -90,7 +91,7 @@ export async function sessionIdentity(token?: string) {
   if (!user) return null;
   // Never upsert here: a concurrent logout must not resurrect a session.
   await writeState(key, { ...session, lastSeen: now }, stored.version, session.expiresAt);
-  return { user, admin: isAdminUser(user.id) };
+  return { user, admin: isAdminUser(user) };
 }
 export async function requireUser(request: Request) {
   const identity = await sessionIdentity(cookieToken(request));

@@ -21,6 +21,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  isAdmin?: boolean;
   phone?: string;
   district: string;
   userType: UserType;

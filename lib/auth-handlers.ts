@@ -48,7 +48,7 @@ export const register = authRoute(async request => {
   };
   if (!await writeState(key, account, null)) throw new AuthError(409, "Unable to create this account. Sign in or use password recovery.");
   const user = await materializeProfile(account);
-  const response = NextResponse.json({ user, admin: isAdminUser(user.id) }, { status: 201 });
+  const response = NextResponse.json({ user, admin: isAdminUser(user) }, { status: 201 });
   await startSession(account, request, response);
   return response;
 });
@@ -63,7 +63,7 @@ export const login = authRoute(async request => {
   const matches = await verifyPassword(body.password, stored?.value.passwordHash);
   if (!matches || !stored) throw new AuthError(401, "Invalid email or password.");
   const user = await materializeProfile(stored.value);
-  const response = NextResponse.json({ user, admin: isAdminUser(user.id) });
+  const response = NextResponse.json({ user, admin: isAdminUser(user) });
   await startSession(stored.value, request, response);
   return response;
 });
