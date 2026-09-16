@@ -1,4 +1,11 @@
 import Link from "next/link";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Terms of Use",
+  description: "Read the terms for using the e-tungo livestock and animal-products marketplace in Rwanda.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

@@ -1,4 +1,11 @@
 import Link from "next/link";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Livestock Marketplace Safety Tips",
+  description: "Read practical safety tips for buying livestock and animal products from sellers in Rwanda through e-tungo.",
+  path: "/safety",
+});
 
 export default function SafetyPage() {
   return (

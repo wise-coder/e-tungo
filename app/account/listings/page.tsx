@@ -11,6 +11,7 @@ import EmptyState from "@/components/EmptyState";
 import CategoryIcon from "@/components/CategoryIcon";
 import type { Listing } from "@/lib/types";
 import { formatPrice, formatTimeAgo } from "@/lib/utils";
+import { listingImageAlt } from "@/lib/seo";
 
 export default function MyListingsPage() {
   const { t, lang, hydrated, user, deleteListing, updateListing } = useApp();
@@ -128,7 +129,7 @@ export default function MyListingsPage() {
                     {listing.images[0] ? (
                       <Image
                         src={listing.images[0]}
-                        alt={listing.title}
+                        alt={listingImageAlt(listing)}
                         fill
                         className="object-cover"
                         sizes="80px"

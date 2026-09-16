@@ -3,8 +3,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/AdminShell";
 import { getAdminEmailFromCookies } from "@/lib/admin-auth";
+import { createPrivateMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+export const metadata = createPrivateMetadata("Admin", "/admin");
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const adminEmail = await getAdminEmailFromCookies(await cookies());

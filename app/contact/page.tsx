@@ -1,4 +1,11 @@
 import Link from "next/link";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Contact e-tungo",
+  description: "Contact e-tungo for help using Rwanda's livestock and animal-products marketplace.",
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

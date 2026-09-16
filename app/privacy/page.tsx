@@ -1,4 +1,11 @@
 import Link from "next/link";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Privacy Policy",
+  description: "Read how e-tungo handles account and marketplace information for livestock buyers and sellers in Rwanda.",
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

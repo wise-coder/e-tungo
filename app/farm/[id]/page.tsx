@@ -1,11 +1,41 @@
 import Link from "next/link";
+import { cache } from "react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, PhoneCall, BadgeCheck } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
 import { getListingsBySellerId, getUserById } from "@/lib/db";
+import { createPageMetadata, NO_INDEX_ROBOTS } from "@/lib/seo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const loadFarm = cache(async (id: string) =>
+  Promise.all([getUserById(id), getListingsBySellerId(id)])
+);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const [profile, listings] = await loadFarm(id);
+    const fallbackListing = listings[0];
+    if (!profile && !fallbackListing) return { title: "Farm not found", robots: NO_INDEX_ROBOTS };
+
+    const name = profile?.name ?? fallbackListing?.sellerName ?? "Farm";
+    const district = profile?.district ?? fallbackListing?.sellerDistrict ?? fallbackListing?.district ?? "Rwanda";
+    return createPageMetadata({
+      title: `${name} Livestock Listings in ${district}`,
+      description: `Browse active livestock and animal-product listings from ${name} in ${district}, Rwanda on e-tungo.`,
+      path: `/farm/${encodeURIComponent(id)}`,
+    });
+  } catch {
+    return { title: "Farm profile", robots: NO_INDEX_ROBOTS };
+  }
+}
 
 export default async function FarmProfilePage({
   params,
@@ -13,10 +43,7 @@ export default async function FarmProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [profile, listings] = await Promise.all([
-    getUserById(id),
-    getListingsBySellerId(id),
-  ]);
+  const [profile, listings] = await loadFarm(id);
 
   const fallbackListing = listings[0];
 

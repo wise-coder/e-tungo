@@ -7,6 +7,7 @@ import { formatPrice, formatTimeAgo, getCategoryLabel } from "@/lib/utils";
 import { useApp } from "@/context/AppContext";
 import CategoryIcon from "./CategoryIcon";
 import { listingBadges } from "@/lib/marketplace-badges";
+import { listingImageAlt } from "@/lib/seo";
 
 interface ListingCardProps {
   listing: Listing;
@@ -27,7 +28,7 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
         {listing.images[0] ? (
           <Image
             src={listing.images[0]}
-            alt={listing.title}
+            alt={listingImageAlt(listing)}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 50vw, 300px"

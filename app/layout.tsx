@@ -6,18 +6,68 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import SplashScreen from "@/components/SplashScreen";
 import { getBootstrapData } from "@/lib/db";
+import {
+  DEFAULT_DESCRIPTION,
+  INDEX_ROBOTS,
+  SITE_NAME,
+  SITE_URL,
+  SOCIAL_IMAGE_PATH,
+} from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "e-tungo | Trusted livestock marketplace in Rwanda",
-  description:
-    "e-tungo helps buyers and sellers connect over trusted livestock and farm products across Rwanda.",
-  keywords: ["livestock", "Rwanda", "cattle", "goats", "amatungo", "marketplace"],
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
+  title: {
+    default: "e-tungo | Rwanda Livestock & Animal Products Marketplace",
+    template: "%s | e-tungo",
+  },
+  description: DEFAULT_DESCRIPTION,
+  keywords: [
+    "Rwanda livestock marketplace",
+    "livestock for sale Rwanda",
+    "amatungo",
+    "cattle",
+    "goats",
+    "pigs",
+    "chickens",
+    "rabbits",
+    "milk",
+    "eggs",
+    "honey",
+    "animal products Rwanda",
+  ],
+  alternates: { canonical: "/" },
+  robots: INDEX_ROBOTS,
+  icons: {
+    icon: [
+      { url: "/favicon.ico", type: "image/x-icon" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    apple: [{ url: "/icon.png", type: "image/png" }],
+  },
   openGraph: {
-    title: "e-tungo",
-    description: "Trusted livestock and farm product marketplace in Rwanda.",
+    title: "e-tungo | Rwanda Livestock & Animal Products Marketplace",
+    description: DEFAULT_DESCRIPTION,
+    url: "/",
+    siteName: SITE_NAME,
+    locale: "en_RW",
     type: "website",
+    images: [
+      {
+        url: SOCIAL_IMAGE_PATH,
+        width: 1200,
+        height: 630,
+        alt: "e-tungo - Rwanda livestock and animal-products marketplace",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "e-tungo | Rwanda Livestock & Animal Products Marketplace",
+    description: DEFAULT_DESCRIPTION,
+    images: [SOCIAL_IMAGE_PATH],
   },
 };
 

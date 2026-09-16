@@ -5,6 +5,7 @@ import { formatPrice, formatTimeAgo } from "@/lib/utils";
 import { loadAdminDashboardData } from "@/lib/admin-dashboard-data";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import AdminListingControls from "@/components/AdminListingControls";
+import { listingImageAlt } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,7 @@ export default async function AdminListingsPage() {
                 {listing.images[0] ? (
                   <Image
                     src={listing.images[0]}
-                    alt={listing.title}
+                    alt={listingImageAlt(listing)}
                     width={64}
                     height={64}
                     unoptimized
