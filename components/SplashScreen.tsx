@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import cowImage from "../cowsvg to use on splash page.png";
+import loadingLogo from "../public/e-tungo-loading-logo.png";
 
 const COW_DURATION = 700;
 const TEXT_DELAY = 260;
@@ -62,8 +62,8 @@ export default function SplashScreen() {
           }}
         >
           <Image
-            src={cowImage}
-            alt=""
+            src={loadingLogo}
+            alt="e-tungo"
             priority
             className="h-32 w-auto sm:h-36 md:h-40"
           />

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Clock } from "lucide-react";
+import { MapPin, Clock, Eye, Heart } from "lucide-react";
 import { Listing } from "@/lib/types";
 import { formatPrice, formatTimeAgo, getCategoryLabel } from "@/lib/utils";
 import { useApp } from "@/context/AppContext";
@@ -20,7 +20,7 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
   return (
     <Link
       href={`/listing/${listing.id}`}
-      className="group block overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-lg"
+      className="group block overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors hover:border-brand-700"
     >
       {/* Image */}
       <div className={`relative bg-gray-100 ${compact ? "h-36" : "h-44"} overflow-hidden`}>
@@ -70,7 +70,11 @@ export default function ListingCard({ listing, compact = false }: ListingCardPro
             </span>
           )}
         </p>
-        <p className="mt-2 text-xs text-gray-500">👁 {listing.views} views · ♡ {listing.saves ?? 0} saves</p>
+        <p className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+          <span className="flex items-center gap-1"><Eye size={12} /> {listing.views}</span>
+          <span>·</span>
+          <span className="flex items-center gap-1"><Heart size={12} /> {listing.saves ?? 0}</span>
+        </p>
         <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
           <span className="flex items-center gap-1.5">
             <MapPin size={12} />

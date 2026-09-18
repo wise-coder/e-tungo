@@ -408,12 +408,12 @@ export const translations = {
     soldBadge: "BYAGURISHIJWE",
 
     // Empty states
-    noListings: "Nta matangazo nawe",
+    noListings: "Nta matangazo arahari",
     noListingsDesc: "Ntago watangaza na kimwe.",
     sellSomething: "Gurisha Ikintu",
     noResults: "Nta bisubizo bibonetse",
     noResultsDesc: "Ntasho twabone ibyo ushaka. Gerageza akarere cyangwa icyiciro gindi.",
-    noRequests: "Nta bifuzo nawe",
+    noRequests: "Nta bifuzo biraboneka",
     noRequestsDesc: "Nta bifuzo by'abaguzi kuri ubu.",
 
     // Footer

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle, ShieldCheck, Lock } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import ProfileImagePicker from "@/components/ProfileImagePicker";
 
@@ -24,7 +24,7 @@ export default function ProfilePage() {
     setPhone(user.phone ?? "");
     setBio(user.bio ?? "");
     setProfileImage(user.profileImage ?? "");
-  }, [user?.id, user?.name, user?.district, user?.phone, user?.bio, user?.profileImage]);
+  }, [user]);
 
   if (!hydrated) {
     return (
@@ -39,7 +39,11 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="max-w-sm mx-auto px-4 py-16 text-center">
-        <p className="text-5xl mb-4">🔒</p>
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+            <Lock size={32} />
+          </div>
+        </div>
         <h2 className="text-xl font-bold text-gray-900 mb-2">Sign in required</h2>
         <a
           href="/signin?redirect=/account/profile"

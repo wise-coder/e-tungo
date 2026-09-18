@@ -17,14 +17,14 @@ export default function WantedCard({ request }: WantedCardProps) {
   return (
     <Link
       href={`/wanted/${request.id}`}
-      className="block rounded-3xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-lg"
+      className="block rounded-3xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-brand-700"
     >
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-700 text-white">
           <CategoryIcon category={request.category} size={18} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold leading-snug text-gray-950">
+          <p className="text-sm font-semibold leading-snug text-gray-950 break-words">
             {request.title}
           </p>
           <p className="mt-0.5 text-xs text-gray-500">{request.buyerName}</p>
@@ -41,7 +41,7 @@ export default function WantedCard({ request }: WantedCardProps) {
               <span>{request.quantity}</span>
             </div>
           )}
-          <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-500">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
             <span className="flex items-center gap-1.5">
               <MapPin size={12} />
               {request.buyerDistrict}

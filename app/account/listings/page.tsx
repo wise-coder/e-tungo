@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, Edit, Trash2, CheckCircle, Plus } from "lucide-react";
+import { ArrowLeft, Eye, Edit, Trash2, CheckCircle, Plus, Lock, Heart, Phone, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { useApp } from "@/context/AppContext";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -70,7 +70,11 @@ export default function MyListingsPage() {
   if (!user) {
     return (
       <div className="max-w-sm mx-auto px-4 py-16 text-center">
-        <p className="text-5xl mb-4">🔒</p>
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+            <Lock size={32} />
+          </div>
+        </div>
         <h2 className="text-xl font-bold text-gray-900 mb-2">Sign in required</h2>
         <Link
           href="/signin?redirect=/account/listings"
@@ -110,7 +114,6 @@ export default function MyListingsPage() {
           </div>
         ) : myListings.length === 0 ? (
           <EmptyState
-            emoji="📋"
             title={t.noListings}
             description={t.noListingsDesc}
             actionLabel={t.sellSomething}
@@ -155,8 +158,8 @@ export default function MyListingsPage() {
                       {formatPrice(listing.price)}
                     </p>
                     <div className="mt-1 space-y-0.5 text-xs text-gray-500">
-                      <p><Eye size={11} className="mr-1 inline" />{listing.views} views · {listing.uniqueViews ?? 0} unique · ♡ {listing.saves ?? 0} saves</p>
-                      <p>📞 {listing.calls ?? 0} calls · 💬 {listing.whatsappClicks ?? 0} WhatsApp clicks · {listing.shares ?? 0} shares</p>
+                      <p><Eye size={11} className="mr-1 inline" />{listing.views} views · {listing.uniqueViews ?? 0} unique · <Heart size={11} className="mr-1 inline" />{listing.saves ?? 0} saves</p>
+                      <p><Phone size={11} className="mr-1 inline" />{listing.calls ?? 0} calls · <MessageCircle size={11} className="mr-1 inline" />{listing.whatsappClicks ?? 0} WhatsApp clicks · {listing.shares ?? 0} shares</p>
                       <p>{formatTimeAgo(listing.postedAt, lang)}</p>
                     </div>
                   </div>

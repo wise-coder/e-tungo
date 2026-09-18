@@ -1,6 +1,6 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, Clock, Package, Calendar, DollarSign, PhoneCall } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Package, Calendar, DollarSign, PhoneCall, Search } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import CategoryIcon from "@/components/CategoryIcon";
 import { getCategoryLabel, formatTimeAgo } from "@/lib/utils";
@@ -16,7 +16,7 @@ export default function WantedDetailPage() {
   if (!request) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-5xl mb-4">🔍</p>
+        <div className="flex justify-center mb-4"><Search size={48} className="text-gray-400" /></div>
         <h2 className="text-xl font-bold text-gray-800 mb-2">Request not found</h2>
         <button onClick={() => router.back()} className="mt-4 text-brand-700 font-semibold hover:underline">
           Go back

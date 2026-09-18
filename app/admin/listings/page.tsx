@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUpRight, Eye, ImageIcon, MapPin, Package } from "lucide-react";
+import { ArrowUpRight, Eye, ImageIcon, MapPin, Package, Heart, Phone, MessageCircle } from "lucide-react";
 import { formatPrice, formatTimeAgo } from "@/lib/utils";
 import { loadAdminDashboardData } from "@/lib/admin-dashboard-data";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
@@ -80,8 +80,8 @@ export default async function AdminListingsPage() {
                     <Eye size={15} className="text-[#375d3f]" />
                     {listing.views} views · {listing.uniqueViews ?? 0} unique
                   </div>
-                  <div>♡ {listing.saves ?? 0} saves</div>
-                  <div>📞 {listing.calls ?? 0} calls · 💬 {listing.whatsappClicks ?? 0} WhatsApp</div>
+                  <div className="inline-flex items-center gap-1.5"><Heart size={14} className="text-[#375d3f]" /> {listing.saves ?? 0} saves</div>
+                  <div className="inline-flex items-center gap-2"><span><Phone size={13} className="inline mr-1 text-[#375d3f]" />{listing.calls ?? 0} calls</span> · <span><MessageCircle size={13} className="inline mr-1 text-[#375d3f]" />{listing.whatsappClicks ?? 0} WhatsApp</span></div>
                   <div>{listing.shares ?? 0} shares</div>
                   <div className="font-semibold text-[#262424]">
                     {formatPrice(listing.price)}

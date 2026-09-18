@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import Header from "@/components/Header";
-import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import SplashScreen from "@/components/SplashScreen";
 import { getBootstrapData } from "@/lib/db";
@@ -14,6 +13,18 @@ export const metadata: Metadata = {
   description:
     "e-tungo helps buyers and sellers connect over trusted livestock and farm products across Rwanda.",
   keywords: ["livestock", "Rwanda", "cattle", "goats", "amatungo", "marketplace"],
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "e-tungo",
     description: "Trusted livestock and farm product marketplace in Rwanda.",
@@ -41,10 +52,9 @@ export default async function RootLayout({
         <AppProvider initialListings={listings.filter(listing => listing.status !== "hidden")} initialWantedRequests={wantedRequests}>
           <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1 pb-20 md:pb-0">{children}</main>
+            <main className="flex-1 flex flex-col">{children}</main>
             <Footer />
           </div>
-          <MobileBottomNav />
         </AppProvider>
         <SplashScreen />
       </body>

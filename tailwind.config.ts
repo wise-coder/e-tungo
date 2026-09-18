@@ -20,6 +20,10 @@ const config: Config = {
           700: "#375d3f",
           800: "#2f4f35",
           900: "#243d29",
+          accent: "rgb(0, 167, 52)",
+        },
+        accent: {
+          green: "rgb(0, 167, 52)",
         },
       },
       fontFamily: {

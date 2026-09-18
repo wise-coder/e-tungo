@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight, Building2, MapPin } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { loadAdminDashboardData } from "@/lib/admin-dashboard-data";
@@ -39,9 +40,12 @@ export default async function AdminUsersPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
                   {user.profileImage ? (
-                    <img
+                    <Image
                       src={user.profileImage}
                       alt={user.name}
+                      width={56}
+                      height={56}
+                      unoptimized
                       className="h-14 w-14 rounded-2xl object-cover"
                     />
                   ) : (
