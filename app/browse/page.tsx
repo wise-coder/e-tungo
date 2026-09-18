@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, Check, ChevronDown, CircleX, MapPin, Search } from "lucide-react";
@@ -107,6 +107,7 @@ function BrowseContent() {
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("recommended");
+  const listingsSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setLoading(false), 250);
@@ -158,6 +159,16 @@ function BrowseContent() {
     else params.delete("category");
     const nextQuery = params.toString();
     router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  };
+
+  const selectCategoryAndShowListings = (category: ListingCategory | "") => {
+    setCategory(category);
+    window.requestAnimationFrame(() => {
+      listingsSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
   };
 
   const clearFilters = () => {
@@ -242,7 +253,8 @@ function BrowseContent() {
               <button
                 key={card.key}
                 type="button"
-                onClick={() => setCategory(isActive ? "" : card.key)}
+                onClick={() => selectCategoryAndShowListings(isActive ? "" : card.key)}
+                aria-pressed={isActive}
                 className={`group relative h-56 sm:h-60 rounded-3xl overflow-hidden text-left focus:outline-none ${
                   isActive
                     ? "ring-4 ring-[#104b27] ring-offset-2 scale-[1.02]"
@@ -301,7 +313,7 @@ function BrowseContent() {
         </div>
 
         {/* 3. LISTINGS SECTION */}
-        <div className="mt-12 border-t border-gray-200 pt-8">
+        <div ref={listingsSectionRef} className="mt-12 scroll-mt-24 border-t border-gray-200 pt-8">
           <div className="mb-5 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
               <h2 className="text-xl font-black tracking-tight text-gray-900 md:text-2xl">
