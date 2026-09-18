@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { Listing, ListingCategory } from "@/lib/types";
 
-const FALLBACK_SITE_URL = "https://e-tungo.vercel.app";
+const FALLBACK_SITE_URL = "https://e-tungo.tungatechnologies.com";
 
 function normalizeSiteUrl(value?: string) {
   try {

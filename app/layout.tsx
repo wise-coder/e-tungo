@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     "animal products Rwanda",
   ],
   alternates: { canonical: "/" },
+  verification: {
+    google: "XDXR3Q6GDJ9O6sPWf9OYkQqdCN-E72g8H2qvinrHjUM",
+  },
   robots: INDEX_ROBOTS,
   icons: {
     icon: [
