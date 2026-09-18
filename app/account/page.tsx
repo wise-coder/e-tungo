@@ -21,7 +21,7 @@ export default function AccountPage() {
   if (!user) {
     return (
       <div className="max-w-sm mx-auto px-4 py-16 text-center">
-        <div className="text-5xl mb-4">👤</div>
+        <div className="flex justify-center mb-4"><div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-500"><User size={32} /></div></div>
         <h2 className="text-xl font-bold text-gray-900 mb-2">
           {t.signIn}
         </h2>

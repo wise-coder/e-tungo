@@ -8,10 +8,10 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
     <div className="flex items-center gap-1 text-sm">
       <button
         onClick={() => setLang("rw")}
-        className={`px-2 py-1 rounded font-medium transition-colors ${
+        className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors ${
           lang === "rw"
-            ? "bg-brand-700 text-white"
-            : "text-gray-600 hover:text-brand-700"
+            ? "bg-[#104b27] text-white"
+            : "text-gray-700 hover:text-[#104b27]"
         }`}
         aria-label="Kinyarwanda"
       >
@@ -20,10 +20,10 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
       <span className="text-gray-300">|</span>
       <button
         onClick={() => setLang("en")}
-        className={`px-2 py-1 rounded font-medium transition-colors ${
+        className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors ${
           lang === "en"
-            ? "bg-brand-700 text-white"
-            : "text-gray-600 hover:text-brand-700"
+            ? "bg-[#104b27] text-white"
+            : "text-gray-700 hover:text-[#104b27]"
         }`}
         aria-label="English"
       >

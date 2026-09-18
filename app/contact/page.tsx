@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { fetchCompanyData } from "@/lib/fetch-company-content";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -7,28 +8,32 @@ export const metadata = createPageMetadata({
   path: "/contact",
 });
 
-export default function ContactPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ContactPage() {
+  const data = await fetchCompanyData("/contact");
+  const channels = data.channels ?? [];
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">Contact Us</h1>
-      <p className="text-gray-600 mb-6">
-        Have a question or need help? Reach us through any of the channels below.
-      </p>
+      <h1 className="text-3xl font-bold text-gray-900 mb-4">{data.title}</h1>
+      {data.subtitle && <p className="text-gray-600 mb-6">{data.subtitle}</p>}
       <div className="space-y-4">
-        <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100">
-          <span className="text-2xl">📞</span>
-          <div>
-            <p className="font-semibold text-gray-900">Phone / WhatsApp</p>
-            <p className="text-brand-700 font-medium">0792633097</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100">
-          <span className="text-2xl">✉️</span>
-          <div>
-            <p className="font-semibold text-gray-900">Email</p>
-            <p className="text-brand-700 font-medium">tungatechnologies@gmail.com</p>
-          </div>
-        </div>
+        {channels.map((channel, index) => (
+          <a
+            key={index}
+            href={channel.href}
+            target={channel.href.startsWith("http") ? "_blank" : undefined}
+            rel={channel.href.startsWith("http") ? "noreferrer" : undefined}
+            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-[#104b27] transition-colors"
+          >
+            <span className="text-2xl">{channel.icon}</span>
+            <div>
+              <p className="font-semibold text-gray-900">{channel.label}</p>
+              <p className="text-brand-700 font-medium">{channel.value}</p>
+            </div>
+          </a>
+        ))}
       </div>
       <div className="mt-8">
         <Link href="/" className="text-brand-700 font-semibold hover:underline">

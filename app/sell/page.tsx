@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, MapPin } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { ListingCategory } from "@/lib/types";
 import CategorySelector from "@/components/CategorySelector";
@@ -414,7 +414,7 @@ function DetailsStep({
                         : "border-gray-200 text-gray-600 hover:border-brand-700"
                   }`}
                   >
-                    {s === "male" ? `♂ ${t.male}` : `♀ ${t.female}`}
+                    {s === "male" ? t.male : t.female}
                   </button>
                 ))}
               </div>
@@ -550,7 +550,7 @@ function PreviewStep({ form, category }: { form: FormData; category: ListingCate
             {form.price ? formatPrice(parseInt(form.price)) : "—"}
           </p>
           {form.district && (
-            <p className="text-sm text-gray-500">📍 {form.district}{form.sector ? `, ${form.sector}` : ""}</p>
+            <p className="text-sm text-gray-500 flex items-center gap-1"><MapPin size={14} className="text-gray-400" /> {form.district}{form.sector ? `, ${form.sector}` : ""}</p>
           )}
           {user?.phone ? <p className="text-sm text-gray-600">Buyers can call or WhatsApp you at <strong>{user.phone}</strong>.</p>
             : <p className="text-sm text-red-600">Add your mobile number in <a className="font-semibold underline" href="/account/profile">your profile</a> before publishing.</p>}

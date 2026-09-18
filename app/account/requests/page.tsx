@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, XCircle, PhoneCall } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, XCircle, PhoneCall, Lock } from "lucide-react";
 import Link from "next/link";
 import { useApp } from "@/context/AppContext";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -20,7 +20,11 @@ export default function MyRequestsPage() {
   if (!user) {
     return (
       <div className="max-w-sm mx-auto px-4 py-16 text-center">
-        <p className="mb-4 text-5xl">🔒</p>
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+            <Lock size={32} />
+          </div>
+        </div>
         <h2 className="mb-2 text-xl font-bold text-gray-900">Sign in required</h2>
         <Link
           href="/signin?redirect=/account/requests"
@@ -55,7 +59,6 @@ export default function MyRequestsPage() {
       <div className="px-4 py-4">
         {myRequests.length === 0 ? (
           <EmptyState
-            emoji="📋"
             title={t.noRequests}
             description="You haven't posted any buyer requests yet."
             actionLabel={t.postRequest}

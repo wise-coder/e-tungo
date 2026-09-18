@@ -44,17 +44,17 @@ export function getCategoryLabel(category: ListingCategory, lang: "en" | "rw"): 
 }
 
 export const CATEGORY_EMOJIS: Record<ListingCategory, string> = {
-  cattle: "🐮",
-  goats: "🐐",
-  sheep: "🐑",
-  pigs: "🐖",
-  chickens: "🐔",
-  rabbits: "🐇",
-  fish: "🐟",
-  milk: "🥛",
-  eggs: "🥚",
-  honey: "🍯",
-  other: "🌿",
+  cattle: "",
+  goats: "",
+  sheep: "",
+  pigs: "",
+  chickens: "",
+  rabbits: "",
+  fish: "",
+  milk: "",
+  eggs: "",
+  honey: "",
+  other: "",
 };
 
 export const ALL_CATEGORIES: ListingCategory[] = [

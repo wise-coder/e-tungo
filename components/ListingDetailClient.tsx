@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, MapPin, Clock, Share2, Flag, ShieldCheck, Eye, Heart } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Share2, Flag, ShieldCheck, Eye, Heart, AlertCircle } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import PhoneContactButtons from "@/components/PhoneContactButtons";
 import CategoryIcon from "@/components/CategoryIcon";
@@ -99,7 +99,9 @@ export default function ListingDetailClient({ initialListing }: { initialListing
     if (loadingListing) return <div className="mx-auto max-w-2xl px-4 py-16 text-center text-gray-500">Loading listing...</div>;
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-5xl mb-4">🐄</p>
+        <div className="flex justify-center mb-4">
+          <AlertCircle size={48} className="text-gray-400" />
+        </div>
         <h2 className="text-xl font-bold text-gray-800 mb-2">Listing not found</h2>
         <button
           onClick={() => router.back()}

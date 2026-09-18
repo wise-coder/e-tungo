@@ -1,103 +1,77 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Megaphone } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import ListingCard from "@/components/ListingCard";
-import { isFeaturedActive } from "@/lib/listing-boost";
 
 export default function HomePage() {
-  const { lang, listings } = useApp();
-  const featured = listings.filter(listing => listing.status === "active" && isFeaturedActive(listing)).slice(0, 4);
+  const { lang, user } = useApp();
 
   return (
-    <div className="min-h-screen bg-[#f3f1ed]">
-      <section className="border-b border-[#e1dbd3] px-4 pb-6 pt-6 md:pb-8 md:pt-8">
-        <div className="mx-auto max-w-[1280px]">
-          <div className="mx-auto max-w-5xl text-center">
-            <h1 className="mx-auto max-w-4xl text-2xl font-black tracking-tight text-[#262424] sm:text-3xl md:text-4xl lg:text-5xl">
+    <div className="flex flex-col bg-white">
+      {/* HERO SECTION */}
+      <section
+        className="relative flex min-h-[420px] sm:min-h-[450px] md:min-h-[470px] lg:min-h-[490px] items-center overflow-hidden bg-cover bg-[center_right] sm:bg-[center_right] md:bg-right bg-no-repeat px-6 md:px-12 py-10 md:py-12"
+        style={{
+          backgroundImage: "url('/home-image.png')",
+        }}
+      >
+        {/* Subtle gradient overlay on mobile for high contrast */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#034d85]/75 via-[#034d85]/35 to-transparent sm:from-transparent pointer-events-none" />
+
+        <div className="relative z-10 mx-auto w-full max-w-7xl">
+          <div className="max-w-2xl">
+            {/* Eyebrow Tag */}
+            <p className="text-xs sm:text-sm font-extrabold tracking-[0.15em] text-white uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
               {lang === "rw"
-                ? "Menyekanisha amatungo yizewe mu Rwanda."
-                : "Show trusted livestock across Rwanda."}
-            </h1>
-            <p className="mx-auto mt-3 max-w-3xl text-sm leading-6 text-[#6a5f56] md:text-base">
-              {lang === "rw"
-                ? "Shakisha amatungo ari ku isoko n'ibikomoka ku matungo byizewe, cyangwa utangaze ibyo ufite mu buryo bworoshye."
-                : "Browse verified livestock and farm products, or list what you have in a simple, professional flow."}
+                ? "ISOKO RY'AMATUNGO MU RWANDA"
+                : "RWANDA'S LIVESTOCK MARKETPLACE"}
             </p>
-          </div>
-        </div>
-      </section>
 
-      {featured.length > 0 && <section className="px-4 py-6 md:py-8">
-        <div className="mx-auto max-w-[1280px]">
-          <h2 className="mb-4 text-xl font-black text-[#262424]">Featured listings</h2>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{featured.map(listing => <ListingCard key={listing.id} listing={listing} />)}</div>
-        </div>
-      </section>}
+            {/* Main Headline */}
+            <h1 className="mt-4 sm:mt-5 text-3xl sm:text-4xl md:text-[3.25rem] lg:text-[3.65rem] font-extrabold sm:font-black text-white leading-[1.24] sm:leading-[1.2] tracking-normal drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]">
+              {lang === "rw" ? (
+                <>
+                  Gura kandi ugurishe{" "}
+                  <span className="text-[#8ef99d]">amatungo,</span>
+                  <br />
+                  mu buryo bworoshye.
+                </>
+              ) : (
+                <>
+                  Buy and sell{" "}
+                  <span className="text-[#8ef99d]">livestock,</span>
+                  <br />
+                  the easy way.
+                </>
+              )}
+            </h1>
 
-      <section className="px-4 py-6 md:py-8">
-        <div className="mx-auto max-w-[1280px]">
-          <div className="mb-6 text-center">
-            <h2 className="text-xl font-black tracking-tight text-[#262424] md:text-3xl">
-              Choose / Hitamo?
-            </h2>
-          </div>
+            {/* Subtitle */}
+            <p className="mt-4 sm:mt-5 text-sm sm:text-base md:text-[1.05rem] text-white font-medium max-w-xl leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
+              {lang === "rw"
+                ? "Hura n'aborozi n'abacuruzi bizewe mu Rwanda hose. Byizewe, byoroshye, kandi bihamye."
+                : "Connect with trusted farmers and sellers across Rwanda. Safe, simple, and reliable."}
+            </p>
 
-          <div className="mx-auto grid max-w-5xl gap-5 md:grid-cols-2 md:gap-6">
-            <Link
-              href="/browse"
-              className="group rounded-[24px] border border-[#ebe5dd] bg-white p-5 shadow-[0_20px_40px_rgba(37,32,27,0.08)] transition-all hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(37,32,27,0.12)] md:p-6"
-            >
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2ef] text-[#3d6545] md:mb-8 md:h-14 md:w-14">
-                <span className="text-xl leading-none" aria-hidden="true">
-                  🐮
-                </span>
-              </div>
-              <h3 className="text-xl font-black tracking-tight text-[#262424] md:text-2xl">
-                {lang === "rw" ? "Amatungo ari ku isoko" : "Assets / Imari"}
-              </h3>
-              <p className="mt-2 max-w-md text-sm leading-6 text-[#5f564e] md:text-base">
-                {lang === "rw"
-                  ? "Reba amatungo yizewe, ibikomoka ku matungo n'ibindi byashyizwe ku isoko n'abacuruzi bo mu gihugu hose."
-                  : "Explore verified livestock and farm products from sellers across Rwanda."}
-              </p>
-              <p className="mt-2 max-w-md text-xs italic leading-5 text-[#7a7168] md:text-sm">
-                {lang === "rw"
-                  ? "Shakisha inyamaswa, amata, amagi n'ibindi byerekanwe neza kandi mu buryo busobanutse."
-                  : "Browse clear listings with only the essentials, presented in a calm and professional way."}
-              </p>
-              <div className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#375d3f] transition-colors group-hover:text-[#2a4630]">
-                {lang === "rw" ? "Reba amatangazo" : "Browse listings"}
-                <ArrowRight size={14} />
-              </div>
-            </Link>
+            {/* CTA Buttons */}
+            <div className="mt-7 sm:mt-8 flex flex-wrap items-center gap-3.5">
+              <Link
+                href="/browse"
+                className="inline-flex items-center justify-center gap-2.5 rounded-full bg-[rgb(0,167,52)] px-6 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base font-bold text-white shadow-md transition-colors hover:bg-[#008f2c]"
+              >
+                <span>{lang === "rw" ? "Reba Amatungo" : "Browse Livestock"}</span>
+                <ArrowRight size={18} />
+              </Link>
 
-            <Link
-              href="/sell"
-              className="group rounded-[24px] border border-[#ebe5dd] bg-white p-5 shadow-[0_20px_40px_rgba(37,32,27,0.08)] transition-all hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(37,32,27,0.12)] md:p-6"
-            >
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5ede7] text-[#c46f37] md:mb-8 md:h-14 md:w-14">
-                <Megaphone size={20} strokeWidth={2} />
-              </div>
-              <h3 className="text-xl font-black tracking-tight text-[#262424] md:text-2xl">
-                {lang === "rw" ? "Menyekanisha" : "Add / Amamaza"}
-              </h3>
-              <p className="mt-2 max-w-md text-sm leading-6 text-[#5f564e] md:text-base">
-                {lang === "rw"
-                  ? "Tangaza ibyo ufite, wemeze abasoma itangazo ryawe, kandi uhuze n'abaguzi mu buryo bwihuse."
-                  : "Post what you have and connect with buyers through a simple, verified listing flow."}
-              </p>
-              <p className="mt-2 max-w-md text-xs italic leading-5 text-[#7a7168] md:text-sm">
-                {lang === "rw"
-                  ? "Buri itangazo rigaragara neza, ryoroshye gusoma, kandi ririmo ibisobanuro bikenewe gusa."
-                  : "Every listing is clean, readable, and focused on the information people actually need."}
-              </p>
-              <div className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#c46f37] transition-colors group-hover:text-[#9f5e2f]">
-                {lang === "rw" ? "Tangira none" : "Post now"}
-                <ArrowRight size={14} />
-              </div>
-            </Link>
+              <Link
+                href={user ? "/sell" : "/signup"}
+                className="inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-6 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base font-bold text-[rgb(0,167,52)] shadow-md transition-colors hover:bg-gray-100"
+              >
+                <span>{lang === "rw" ? "Tangira None" : "Get Started"}</span>
+                <ArrowRight size={18} />
+              </Link>
+            </div>
           </div>
         </div>
       </section>

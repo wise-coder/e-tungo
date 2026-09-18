@@ -59,7 +59,7 @@ export default function AdminShell({ adminEmail }: AdminShellProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-[#e6dfd5] bg-[#f3f1ed]/95 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-40 border-b border-[#ebd2b4] bg-[#ffe6ca] md:hidden">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <Logo className="text-[1.9rem]" />

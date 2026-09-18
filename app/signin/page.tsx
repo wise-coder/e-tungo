@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, Suspense, type FormEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
@@ -8,7 +8,7 @@ import Logo from "@/components/Logo";
 import { useApp } from "@/context/AppContext";
 import { safeRedirect } from "@/lib/auth-client";
 
-export default function SignInPage() {
+function SignInContent() {
   const { t, setUser } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,17 +35,27 @@ export default function SignInPage() {
     setError("");
     try {
       const response = await fetch("/api/auth/login", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({ email, password }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Unable to sign in.");
+      let data: any = null;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("Unable to connect to server. Please try again.");
+      }
+      if (!response.ok) throw new Error(data?.error || "Unable to sign in.");
       setUser(data.user);
       setPassword("");
       router.push(data.admin ? "/admin" : redirect);
       router.refresh();
-    } catch (error) { setError(error instanceof Error ? error.message : "Unable to sign in."); }
-    finally { setBusy(false); }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to sign in.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -53,14 +63,18 @@ export default function SignInPage() {
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4">
         <div className="flex items-center justify-between border-b border-black/10 py-4">
           <button
-            onClick={() => router.back()}
+            onClick={() => {
+              if (window.history.length > 1) {
+                router.back();
+              } else {
+                router.push("/");
+              }
+            }}
             className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft size={18} />
             Back
           </button>
-          <Logo className="text-[1.9rem]" />
-          <div className="w-[72px]" />
         </div>
 
         <div className="flex flex-1 items-center justify-center px-4 py-12">
@@ -117,18 +131,24 @@ export default function SignInPage() {
                 </div>
               </div>
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-600">
+                  {error}
+                </div>
+              )}
 
               <button
                 type="submit"
                 disabled={busy}
                 className="w-full rounded-2xl bg-brand-700 px-4 py-3.5 font-bold text-white transition-colors hover:bg-brand-800"
               >
-                {t.signInWithEmail}
+                {busy ? "..." : t.signInWithEmail}
               </button>
             </form>
 
-            <div className="mt-4 text-sm text-brand-700"><Link href="/forgot-password">Forgot password?</Link></div>
+            <div className="mt-4 text-sm text-brand-700">
+              <Link href="/forgot-password">Forgot password?</Link>
+            </div>
             <p className="mt-6 text-center text-sm text-gray-600">
               {t.signUpSubtitle}{" "}
               <Link
@@ -142,5 +162,13 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#efefeb] flex items-center justify-center text-gray-400">Loading...</div>}>
+      <SignInContent />
+    </Suspense>
   );
 }
