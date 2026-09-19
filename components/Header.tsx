@@ -205,7 +205,7 @@ export default function Header() {
             className="mt-2 mb-4 flex items-center justify-center gap-2 w-full rounded-xl bg-[#4ea832] hover:bg-[#43952a] text-white font-bold py-3 px-4 shadow-sm transition-all active:scale-[0.98] text-sm"
           >
             <Plus size={18} strokeWidth={2.5} />
-            <span>{lang === "rw" ? "+ Shyiraho Itangazo" : "+ Add Listing"}</span>
+            <span>{lang === "rw" ? "Shyiraho Itangazo" : "Add Listing"}</span>
           </Link>
 
           {/* Main Navigation Routes */}

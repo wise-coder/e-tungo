@@ -1,0 +1,8 @@
+[33m5d9d66e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: checkout: moving from feature/my-change to main
+[33md0e23b4[m[33m ([m[1;31morigin/your-feature-branch[m[33m, [m[1;32myour-feature-branch[m[33m)[m HEAD@{1}: checkout: moving from main to feature/my-change
+[33m5d9d66e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{2}: pull origin main: Fast-forward
+[33mb2dd922[m HEAD@{3}: checkout: moving from feature/my-change to main
+[33md0e23b4[m[33m ([m[1;31morigin/your-feature-branch[m[33m, [m[1;32myour-feature-branch[m[33m)[m HEAD@{4}: checkout: moving from your-feature-branch to feature/my-change
+[33md0e23b4[m[33m ([m[1;31morigin/your-feature-branch[m[33m, [m[1;32myour-feature-branch[m[33m)[m HEAD@{5}: commit: feat: add core application pages, components, and public assets
+[33mb2dd922[m HEAD@{6}: checkout: moving from main to your-feature-branch
+[33mb2dd922[m HEAD@{7}: clone: from https://github.com/wise-coder/e-tungo.git
