@@ -3,7 +3,7 @@
 import { useState, Suspense, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Mail, Lock, User as UserIcon, Phone } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User as UserIcon, Phone, LoaderCircle } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useApp } from "@/context/AppContext";
 import { safeRedirect } from "@/lib/auth-client";
@@ -27,6 +27,7 @@ function SignUpContent() {
 
   const handleCreate = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (busy) return;
     if (!name.trim()) {
       setError("Please enter your name.");
       return;
@@ -76,9 +77,9 @@ function SignUpContent() {
       setConfirmPassword("");
       router.push(data.admin ? "/admin" : redirect);
       router.refresh();
+      // Keep loading until navigation unmounts this form.
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unable to register.");
-    } finally {
       setBusy(false);
     }
   };
@@ -247,9 +248,13 @@ function SignUpContent() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full rounded-2xl bg-brand-700 px-4 py-3.5 font-bold text-white transition-colors hover:bg-brand-800"
+                aria-busy={busy}
+                className="w-full rounded-2xl bg-brand-700 px-4 py-3.5 font-bold text-white transition-colors hover:bg-brand-800 disabled:cursor-wait"
               >
-                {busy ? "..." : t.signUpWithEmail}
+                <span role="status" className="flex items-center justify-center gap-2">
+                  {busy && <LoaderCircle size={18} className="animate-spin" aria-hidden="true" />}
+                  {busy ? t.loading : t.signUpWithEmail}
+                </span>
               </button>
             </form>
 
